@@ -11,10 +11,7 @@ object Identifier {
 
     fun idOf(any: Any): Int {
         idByObjectLock.withLock {
-            if (any !in idByObject) {
-                idByObject[any] = generateId()
-            }
-            return idByObject[any]!!
+            return idByObject.getOrPut(any, Identifier::generateId)
         }
     }
 
