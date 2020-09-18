@@ -14,6 +14,9 @@ fun main() {
         n0 to listOf(iN0, iN1),
         n1 to listOf(iN0, iN1),
     )
+    n2.setInputSize(2)
+    n0.setInputSize(2)
+    n2.setInputSize(2)
     val neuralNetwork = NeuralNetwork(
         inputNodes = listOf(iN0, iN1),
         links = links,

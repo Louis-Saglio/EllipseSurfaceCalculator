@@ -3,6 +3,7 @@ package neuralnetwork
 import java.lang.RuntimeException
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
+import kotlin.random.Random
 
 interface Inputable<T> {
     fun getOutput(): T
@@ -16,8 +17,21 @@ class Neuron(private var bias: Float) : Inputable<Float> {
     private var output = 0f
 
     fun compute(inputs: List<Float>) {
+        if (inputs.size != weights.size) error("${inputs.size} input(s) but input size is ${weights.size}")
         nextOutputLock.withLock {
             nextOutput = activationFunction((weights zip inputs).map { it.first * it.second }.sum() + bias)
+        }
+    }
+
+    fun setInputSize(size: Int) {
+        if (size > weights.size) {
+            repeat(size - weights.size) {
+                weights.add(Random.nextFloat())
+            }
+        } else if (size < weights.size) {
+            repeat(weights.size - size) {
+                weights.removeAt(weights.size - 1 - it)
+            }
         }
     }
 
