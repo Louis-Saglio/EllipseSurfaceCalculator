@@ -4,31 +4,6 @@ import java.lang.RuntimeException
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
-interface PreSettable {
-    fun preSet(field: String, value: Any)
-    fun update()
-}
-
-open class PreSetter : PreSettable {
-    private val data: HashMap<String, Any> = hashMapOf()
-    private lateinit var kObject: Any
-
-    fun setNeuron(kObject: Any) {
-        this.kObject = kObject
-    }
-
-    override fun preSet(field: String, value: Any) {
-        data[field] = value
-    }
-
-    override fun update() {
-        for ((fieldName, fieldValue) in data) {
-            kObject.javaClass.getDeclaredField(fieldName).set(kObject, fieldValue)
-            data.remove(fieldName)
-        }
-    }
-}
-
 interface Inputable<T> {
     fun getOutput(): T
 }
