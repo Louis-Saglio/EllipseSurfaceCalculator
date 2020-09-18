@@ -15,12 +15,14 @@ fun main() {
         n1 to listOf(iN0, iN1),
     )
     val neuralNetwork = NeuralNetwork(
-        listOf(iN0, iN1),
-        links,
-        listOf(n0, n1, n2),
-        listOf(n2),
+        inputNodes = listOf(iN0, iN1),
+        links = links,
+        neurons = listOf(n0, n1, n2),
+        outputNeurons = listOf(n2),
     )
     println(neuralNetwork.run(listOf(1f, 2f)))
-    File("nn.dot").writeText(neuralNetwork.asGraphviz())
+    val text = neuralNetwork.asGraphviz()
+    println(text)
+    File("nn.dot").writeText(text)
     Runtime.getRuntime().exec("dot -Tpng nn.dot -o neural_network.png")
 }

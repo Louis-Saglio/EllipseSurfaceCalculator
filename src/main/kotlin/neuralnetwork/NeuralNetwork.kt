@@ -49,10 +49,10 @@ class NeuralNetwork(
 
     fun asGraphviz(): String {
         val rows = mutableListOf("digraph {")
+        inputNodes.forEach { rows.add("${Identifier.idOf(it)} [color=green]") }
         links.forEach { (output, inputs) ->
-            inputs.forEach { input ->
-                rows.add("${Identifier.idOf(input)} -> ${Identifier.idOf(output)}")
-            }
+            rows.add(output.asGraphvizNode())
+            rows.addAll(output.asGraphvizLinks(inputs))
         }
         rows.add("}")
         return rows.joinToString("\n")

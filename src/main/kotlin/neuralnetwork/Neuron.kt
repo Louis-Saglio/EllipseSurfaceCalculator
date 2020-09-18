@@ -32,4 +32,14 @@ class Neuron(private var bias: Float) : Inputable<Float> {
     }
 
     fun getExpectedInputSize() = weights.size
+
+    fun asGraphvizNode(): String {
+        return "\"${Identifier.idOf(this)}\" [color=blue]"
+    }
+
+    fun asGraphvizLinks(inputs: Collection<Any>): List<String> {
+        return (weights zip inputs).map { (weight, input) ->
+            "\"${Identifier.idOf(input)}\" -> \"${Identifier.idOf(this)}\" [label=\"$weight\"]"
+        }
+    }
 }
