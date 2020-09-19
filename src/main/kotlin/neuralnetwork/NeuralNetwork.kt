@@ -48,12 +48,12 @@ class NeuralNetwork(
         return outputNeurons.map(Neuron::getOutput)
     }
 
-    fun asGraphviz(): String {
-        val rows = mutableListOf("digraph {")
+    fun asGraphviz(displayWeights: Boolean = true): String {
+        val rows = mutableListOf("digraph {rankdir=LR")
         inputNodes.forEach { rows.add(it.asGraphvizNode()) }
         links.forEach { (output, inputs) ->
             rows.add(output.asGraphvizNode(if (output in outputNeurons) "red" else null))
-            rows.addAll(output.asGraphvizLinks(inputs))
+            rows.addAll(output.asGraphvizLinks(inputs, displayWeights))
         }
         rows.add("}")
         return rows.joinToString("\n")
