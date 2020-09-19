@@ -27,6 +27,10 @@ class InputNode(var output: Float) : Inputable<Float> {
     override fun getOutput(): Float {
         return output
     }
+
+    fun asGraphvizNode(): String {
+        return "\"${Identifier.idOf(this)}\" [label=\"${String.format("%.2f", output)}\" color=green]"
+    }
 }
 
 class NeuralNetwork(
@@ -46,9 +50,9 @@ class NeuralNetwork(
 
     fun asGraphviz(): String {
         val rows = mutableListOf("digraph {")
-        inputNodes.forEach { rows.add("${Identifier.idOf(it)} [color=green]") }
+        inputNodes.forEach { rows.add(it.asGraphvizNode()) }
         links.forEach { (output, inputs) ->
-            rows.add(output.asGraphvizNode())
+            rows.add(output.asGraphvizNode(if (output in outputNeurons) "red" else null))
             rows.addAll(output.asGraphvizLinks(inputs))
         }
         rows.add("}")
