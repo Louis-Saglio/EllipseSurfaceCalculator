@@ -39,6 +39,13 @@ class NeuralNetwork(
     private val neurons: List<Neuron>,
     private val outputNeurons: List<Neuron>
 ) {
+
+    init {
+        links.forEach { (neuron, inputs) ->
+            neuron.setInputSize(inputs.size)
+        }
+    }
+
     fun run(inputs: List<Float>): List<Float> {
         (inputNodes zip inputs).forEach { it.first.output = it.second }
         neurons.forEach {
