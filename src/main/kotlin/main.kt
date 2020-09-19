@@ -26,9 +26,10 @@ fun main() {
         neurons = listOf(n0, n1, n2),
         outputNeurons = listOf(n2),
     )
-    println(neuralNetwork.run(listOf(13f, 2f)))
+    println(neuralNetwork.compute(listOf(13f, 2f), true))
     val text = neuralNetwork.asGraphviz(displayWeights = true)
     println(text)
     File("nn.dot").writeText(text)
     Runtime.getRuntime().exec("dot -Tpng nn.dot -o neural_network.png")
+    assert(neuralNetwork.outputNeuronsByInputable[iN0]?.containsAll(listOf(n0, n1, n5)) == true)
 }

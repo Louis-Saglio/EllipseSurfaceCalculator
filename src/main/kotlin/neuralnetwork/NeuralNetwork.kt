@@ -39,11 +39,22 @@ class NeuralNetwork(
     private val neurons: List<Neuron>,
     private val outputNeurons: List<Neuron>
 ) {
+    val outputNeuronsByInputable: Map<Inputable<Float>, List<Neuron>> = buildOutputNeuronsByInputable()
 
     init {
         links.forEach { (neuron, inputs) ->
             neuron.setInputSize(inputs.size)
         }
+    }
+
+    private fun buildOutputNeuronsByInputable(): Map<Inputable<Float>, List<Neuron>> {
+        val data: MutableMap<Inputable<Float>, MutableList<Neuron>> = mutableMapOf()
+        for ((neuron, inputs) in links) {
+            for (input in inputs) {
+                (data.getOrPut(input) { mutableListOf() }).add(neuron)
+            }
+        }
+        return data
     }
 
     fun run(inputs: List<Float>): List<Float> {
@@ -53,6 +64,22 @@ class NeuralNetwork(
         }
         neurons.forEach(Neuron::update)
         return outputNeurons.map(Neuron::getOutput)
+    }
+
+    fun compute(inputs: List<Float>, log: Boolean = false) {
+        val alreadyComputedNeurons = mutableSetOf<Neuron>()
+        (inputNodes zip inputs).forEach { it.first.output = it.second }
+        var layer = inputNodes.flatMap { outputNeuronsByInputable[it] ?: error("Output of $it not found") }
+        while (layer.isNotEmpty()) {
+            layer.forEach {
+                it.compute((links[it] ?: error("No input found for $it")).map { input -> input.getOutput() }, log)
+                it.update()
+            }
+            alreadyComputedNeurons.addAll(layer)
+            layer = layer
+                .flatMap { outputNeuronsByInputable[it] ?: error("Output of $it not found") }
+                .filter { it !in alreadyComputedNeurons }
+        }
     }
 
     fun asGraphviz(displayWeights: Boolean = true): String {

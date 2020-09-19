@@ -16,11 +16,16 @@ class Neuron(private var bias: Float) : Inputable<Float> {
     private val nextOutputLock = ReentrantLock()
     private var output = 0f
 
-    fun compute(inputs: List<Float>) {
+    fun compute(inputs: List<Float>, log: Boolean = false) {
         if (inputs.size != weights.size) error("${inputs.size} input(s) but input size is ${weights.size}")
         nextOutputLock.withLock {
             nextOutput = activationFunction((weights zip inputs).map { it.first * it.second }.sum() + bias)
         }
+        if (log) println(
+            (weights zip inputs).joinToString(" + ") {
+                "${String.format("%.2f", it.first)} x ${String.format("%.2f", it.second)}"
+            } + " + $bias == ${String.format("%.2f", nextOutput)}"
+        )
     }
 
     fun setInputSize(size: Int) {
