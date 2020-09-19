@@ -71,11 +71,13 @@ class NeuralNetwork(
         (inputNodes zip inputs).forEach { it.first.output = it.second }
         var layer = inputNodes.flatMap { outputNeuronsByInputable[it] ?: error("Output of $it not found") }
         while (layer.isNotEmpty()) {
-            layer.forEach {
-                it.compute((links[it] ?: error("No input found for $it")).map { input -> input.getOutput() }, log)
-                it.update()
+            for (it in layer) {
+                if (it !in alreadyComputedNeurons) {
+                    it.compute((links[it] ?: error("Input of $it not found")).map { input -> input.getOutput() }, log)
+                    alreadyComputedNeurons.add(it)
+                }
             }
-            alreadyComputedNeurons.addAll(layer)
+            layer.forEach { it.update() }
             layer = layer
                 .flatMap { outputNeuronsByInputable[it] ?: error("Output of $it not found") }
                 .filter { it !in alreadyComputedNeurons }
