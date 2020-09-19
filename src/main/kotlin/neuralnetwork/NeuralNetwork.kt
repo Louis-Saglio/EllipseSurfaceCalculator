@@ -1,5 +1,6 @@
 package neuralnetwork
 
+import java.io.File
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
@@ -93,5 +94,10 @@ class NeuralNetwork(
         }
         rows.add("}")
         return rows.joinToString("\n")
+    }
+
+    fun printGraphPNG() {
+        File("nn.dot").writeText(asGraphviz(displayWeights = true))
+        Runtime.getRuntime().exec("dot -Tpng nn.dot -o neural_network.png")
     }
 }

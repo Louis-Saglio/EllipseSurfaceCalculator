@@ -1,7 +1,6 @@
 import neuralnetwork.InputNode
 import neuralnetwork.NeuralNetwork
 import neuralnetwork.Neuron
-import java.io.File
 
 fun main() {
     val n0 = Neuron(0f)
@@ -27,9 +26,6 @@ fun main() {
         outputNeurons = listOf(n2),
     )
     println(neuralNetwork.compute(listOf(13f, 2f), true))
-    val text = neuralNetwork.asGraphviz(displayWeights = true)
-    println(text)
-    File("nn.dot").writeText(text)
-    Runtime.getRuntime().exec("dot -Tpng nn.dot -o neural_network.png")
+    neuralNetwork.printGraphPNG()
     assert(neuralNetwork.outputNeuronsByInputable[iN0]?.containsAll(listOf(n0, n1, n5)) == true)
 }
