@@ -21,11 +21,16 @@ class Neuron(private var bias: Float) : Inputable<Float> {
         nextOutputLock.withLock {
             nextOutput = activationFunction((weights zip inputs).map { it.first * it.second }.sum() + bias)
         }
-        if (log) println(
-            (weights zip inputs).joinToString(" + ") {
-                "${String.format("%.2f", it.first)} x ${String.format("%.2f", it.second)}"
-            } + " + $bias == ${String.format("%.2f", nextOutput)}"
-        )
+        if (log) {
+            println(
+                (weights zip inputs).joinToString(
+                    " + ",
+                    postfix = " + $bias == ${String.format("%.2f", nextOutput)}"
+                ) {
+                    "(${String.format("%.2f", it.first)} x ${String.format("%.2f", it.second)})"
+                }
+            )
+        }
     }
 
     fun setInputSize(size: Int) {
@@ -53,12 +58,16 @@ class Neuron(private var bias: Float) : Inputable<Float> {
     fun getExpectedInputSize() = weights.size
 
     fun asGraphvizNode(color: String? = null): String {
-        return "\"${Identifier.idOf(this)}\" [label=\"${String.format("%.2f", output)}\\n${String.format("%.2f", bias)}\" color=${color ?: "blue"}]"
+        return "\"${Identifier.idOf(this)}\" [label=\"${Identifier.idOf(this)}\\n${String.format("%.2f", output)}\\n${String.format("%.2f", bias)}\" color=${color ?: "blue"}]"
     }
 
     fun asGraphvizLinks(inputs: Collection<Any>, displayWeights: Boolean = true): List<String> {
         return (weights zip inputs).map { (weight, input) ->
             "\"${Identifier.idOf(input)}\" -> \"${Identifier.idOf(this)}\" [label=\"${if (displayWeights) String.format("%.2f", weight) else ""}\"]"
         }
+    }
+
+    override fun toString(): String {
+        return "${this.javaClass.name}(id=${Identifier.idOf(this)})"
     }
 }

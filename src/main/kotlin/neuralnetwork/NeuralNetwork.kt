@@ -37,10 +37,10 @@ class InputNode(var output: Float) : Inputable<Float> {
 class NeuralNetwork(
     private val inputNodes: List<InputNode> = listOf(),
     private val links: Map<Neuron, List<Inputable<Float>>>,
-    private val neurons: List<Neuron>,
     private val outputNeurons: List<Neuron>
 ) {
-    val outputNeuronsByInputable: Map<Inputable<Float>, List<Neuron>> = buildOutputNeuronsByInputable()
+    private val outputNeuronsByInputable: Map<Inputable<Float>, List<Neuron>> = buildOutputNeuronsByInputable()
+    private val neurons = links.map { it.key }
 
     init {
         links.forEach { (neuron, inputs) ->
@@ -67,10 +67,10 @@ class NeuralNetwork(
         return outputNeurons.map(Neuron::getOutput)
     }
 
-    fun compute(inputs: List<Float>, log: Boolean = false) {
+    fun compute(inputs: List<Float>, log: Boolean = false): List<Float> {
         val alreadyComputedNeurons = mutableSetOf<Neuron>()
         (inputNodes zip inputs).forEach { it.first.output = it.second }
-        var layer = inputNodes.flatMap { outputNeuronsByInputable[it] ?: error("Output of $it not found") }
+        var layer = inputNodes.flatMapTo(mutableSetOf()) { outputNeuronsByInputable[it] ?: error("Output of $it not found") }
         while (layer.isNotEmpty()) {
             for (it in layer) {
                 if (it !in alreadyComputedNeurons) {
@@ -80,12 +80,13 @@ class NeuralNetwork(
             }
             layer.forEach { it.update() }
             layer = layer
-                .flatMap { outputNeuronsByInputable[it] ?: error("Output of $it not found") }
-                .filter { it !in alreadyComputedNeurons }
+                .flatMap { outputNeuronsByInputable.getOrDefault(it, listOf()) }
+                .filterTo(mutableSetOf()) { it !in alreadyComputedNeurons }
         }
+        return outputNeurons.map(Neuron::getOutput)
     }
 
-    fun asGraphviz(displayWeights: Boolean = true): String {
+    private fun asGraphviz(displayWeights: Boolean = true): String {
         val rows = mutableListOf("digraph {rankdir=LR")
         inputNodes.forEach { rows.add(it.asGraphvizNode()) }
         links.forEach { (output, inputs) ->
@@ -96,8 +97,8 @@ class NeuralNetwork(
         return rows.joinToString("\n")
     }
 
-    fun printGraphPNG() {
-        File("nn.dot").writeText(asGraphviz(displayWeights = true))
+    fun printGraphPNG(displayWeights: Boolean) {
+        File("nn.dot").writeText(asGraphviz(displayWeights = displayWeights))
         Runtime.getRuntime().exec("dot -Tpng nn.dot -o neural_network.png")
     }
 }

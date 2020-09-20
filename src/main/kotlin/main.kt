@@ -12,20 +12,14 @@ fun main() {
     val iN0 = InputNode(0f)
     val iN1 = InputNode(0f)
     val links = mapOf(
-        n0 to listOf(iN0, iN1, n2),
-        n1 to listOf(iN0, iN1, n4, n5),
-        n3 to listOf(n0, n1),
-        n4 to listOf(n0, n1),
-        n5 to listOf(n0, n1, iN0),
-        n2 to listOf(n3, n4, n5)
+        n0 to listOf(iN0, iN1),
     )
     val neuralNetwork = NeuralNetwork(
         inputNodes = listOf(iN0, iN1),
         links = links,
-        neurons = listOf(n0, n1, n2),
         outputNeurons = listOf(n2),
     )
+    neuralNetwork.printGraphPNG(true)
     println(neuralNetwork.compute(listOf(13f, 2f), true))
-    neuralNetwork.printGraphPNG()
-    assert(neuralNetwork.outputNeuronsByInputable[iN0]?.containsAll(listOf(n0, n1, n5)) == true)
+    neuralNetwork.printGraphPNG(true)
 }
