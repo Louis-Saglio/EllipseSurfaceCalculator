@@ -3,6 +3,7 @@ package neuralnetwork
 import java.io.File
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
+import kotlin.random.Random
 
 object Identifier {
     private var lastId = -1
@@ -35,22 +36,21 @@ class InputNode(var output: Float) : Inputable<Float> {
 }
 
 class NeuralNetwork(
-    private val inputNodes: List<InputNode> = listOf(),
-    private val links: Map<Neuron, List<Inputable<Float>>>,
-    private val outputNeurons: List<Neuron>
+        private val inputNodes: List<InputNode> = listOf(),
+        private val connexions: Map<Neuron, List<Inputable<Float>>>,
+        private val outputNeurons: List<Neuron>
 ) {
     private val outputNeuronsByInputable: Map<Inputable<Float>, List<Neuron>> = buildOutputNeuronsByInputable()
-    private val neurons = links.map { it.key }
 
     init {
-        links.forEach { (neuron, inputs) ->
+        connexions.forEach { (neuron, inputs) ->
             neuron.setInputSize(inputs.size)
         }
     }
 
     private fun buildOutputNeuronsByInputable(): Map<Inputable<Float>, List<Neuron>> {
         val data: MutableMap<Inputable<Float>, MutableList<Neuron>> = mutableMapOf()
-        for ((neuron, inputs) in links) {
+        for ((neuron, inputs) in connexions) {
             for (input in inputs) {
                 (data.getOrPut(input) { mutableListOf() }).add(neuron)
             }
@@ -66,7 +66,7 @@ class NeuralNetwork(
             if (log) println("---------------------------------------------------")
             for (it in layer) {
                 if (it !in alreadyComputedNeurons) {
-                    it.compute((links[it] ?: error("Input of $it not found")).map { input -> input.getOutput() }, log)
+                    it.compute((connexions[it] ?: error("Input of $it not found")).map { input -> input.getOutput() }, log)
                     alreadyComputedNeurons.add(it)
                 }
             }
@@ -81,7 +81,7 @@ class NeuralNetwork(
     private fun asGraphviz(displayWeights: Boolean = true): String {
         val rows = mutableListOf("digraph {rankdir=LR")
         inputNodes.forEach { rows.add(it.asGraphvizNode()) }
-        links.forEach { (output, inputs) ->
+        connexions.forEach { (output, inputs) ->
             rows.add(output.asGraphvizNode(if (output in outputNeurons) "red" else null))
             rows.addAll(output.asGraphvizLinks(inputs, displayWeights))
         }
@@ -92,5 +92,25 @@ class NeuralNetwork(
     fun printGraphPNG(displayWeights: Boolean) {
         File("nn.dot").writeText(asGraphviz(displayWeights = displayWeights))
         Runtime.getRuntime().exec("dot -Tpng nn.dot -o neural_network.png")
+    }
+
+    companion object {
+        fun buildRandom(
+            minNeuronNbr: Int,
+            maxNeuronNbr: Int,
+            minConnexionNbr: Int,
+            maxConnexionNbr: Int,
+            inputNbr: Int,
+            outputNbr: Int,
+        ): NeuralNetwork {
+            val neurons = (0 until (minNeuronNbr..maxNeuronNbr + 1).random()).map { Neuron(0f) }
+            val inputNodes = (0 until inputNbr).map { InputNode(0f) }
+            val connexions = neurons.associateWith {
+                (0 until (minConnexionNbr..maxConnexionNbr + 1).random()).map { (neurons + inputNodes).random() }
+            }
+            // todo : may choose the same neuron multiple times
+            val outputNeurons = (0 until outputNbr).map { neurons.random() }
+            return NeuralNetwork(inputNodes, connexions, outputNeurons)
+        }
     }
 }

@@ -29,10 +29,13 @@ fun main() {
         n9 to listOf(n4, n5, n6, n7, n8),
         n10 to listOf(n4, n5, n6, n7, n8, n1),
     )
-    val neuralNetwork = NeuralNetwork(
-        inputNodes = listOf(iN0, iN1),
-        links = links,
-        outputNeurons = listOf(n9, n10),
+    val neuralNetwork = NeuralNetwork.buildRandom(
+        5,
+        15,
+        1,
+        2,
+        2,
+        2
     )
     neuralNetwork.printGraphPNG(true)
     println(neuralNetwork.compute(listOf(2f, 3f), true))

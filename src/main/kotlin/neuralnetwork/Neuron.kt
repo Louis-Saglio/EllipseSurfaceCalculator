@@ -25,8 +25,8 @@ class Neuron(private var bias: Float) : Inputable<Float> {
             println(
                 (weights zip inputs).joinToString(
                     " + ",
-                    prefix = "$this :\t",
-                    postfix = " + $bias == ${String.format("%.2f", nextOutput)}"
+                    "$this :\t",
+                    " + $bias == ${String.format("%.2f", nextOutput)}"
                 ) {
                     "(${String.format("%.2f", it.first)} x ${String.format("%.2f", it.second)})"
                 }
