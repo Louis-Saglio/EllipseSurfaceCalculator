@@ -25,6 +25,7 @@ class Neuron(private var bias: Float) : Inputable<Float> {
             println(
                 (weights zip inputs).joinToString(
                     " + ",
+                    prefix = "$this :\t",
                     postfix = " + $bias == ${String.format("%.2f", nextOutput)}"
                 ) {
                     "(${String.format("%.2f", it.first)} x ${String.format("%.2f", it.second)})"
@@ -68,6 +69,6 @@ class Neuron(private var bias: Float) : Inputable<Float> {
     }
 
     override fun toString(): String {
-        return "${this.javaClass.name}(id=${Identifier.idOf(this)})"
+        return "${this.javaClass.simpleName}(id=${Identifier.idOf(this)})"
     }
 }

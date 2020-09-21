@@ -58,20 +58,12 @@ class NeuralNetwork(
         return data
     }
 
-    fun run(inputs: List<Float>): List<Float> {
-        (inputNodes zip inputs).forEach { it.first.output = it.second }
-        neurons.forEach {
-            it.compute(links[it]?.map(Inputable<Float>::getOutput) ?: (0 until it.getExpectedInputSize()).map { 0f })
-        }
-        neurons.forEach(Neuron::update)
-        return outputNeurons.map(Neuron::getOutput)
-    }
-
     fun compute(inputs: List<Float>, log: Boolean = false): List<Float> {
         val alreadyComputedNeurons = mutableSetOf<Neuron>()
         (inputNodes zip inputs).forEach { it.first.output = it.second }
         var layer = inputNodes.flatMapTo(mutableSetOf()) { outputNeuronsByInputable[it] ?: error("Output of $it not found") }
         while (layer.isNotEmpty()) {
+            if (log) println("---------------------------------------------------")
             for (it in layer) {
                 if (it !in alreadyComputedNeurons) {
                     it.compute((links[it] ?: error("Input of $it not found")).map { input -> input.getOutput() }, log)
