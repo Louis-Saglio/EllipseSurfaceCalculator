@@ -3,7 +3,6 @@ package neuralnetwork
 import java.io.File
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
-import kotlin.random.Random
 
 object Identifier {
     private var lastId = -1
@@ -103,14 +102,33 @@ class NeuralNetwork(
             inputNbr: Int,
             outputNbr: Int,
         ): NeuralNetwork {
-            val neurons = (0 until (minNeuronNbr..maxNeuronNbr + 1).random()).map { Neuron(0f) }
+            val neurons = (0 until (minNeuronNbr..maxNeuronNbr).random()).map { Neuron(0f) }
             val inputNodes = (0 until inputNbr).map { InputNode(0f) }
-            val connexions = neurons.associateWith {
-                (0 until (minConnexionNbr..maxConnexionNbr + 1).random()).map { (neurons + inputNodes).random() }
-            }
-            // todo : may choose the same neuron multiple times
-            val outputNeurons = (0 until outputNbr).map { neurons.random() }
-            return NeuralNetwork(inputNodes, connexions, outputNeurons)
+            val inputables: MutableList<Inputable<Float>> = inputNodes.toMutableList()
+            return NeuralNetwork(
+                inputNodes,
+                neurons.associateWith { neuron ->
+                    (0 until (minConnexionNbr..maxConnexionNbr).random()).map {
+                        val inputable = inputables.random()
+                        inputables.add(neuron)
+                        inputable
+                    }
+                },
+                neurons.choice(outputNbr).toList()
+            )
         }
     }
+}
+
+// todo : make generic for all Collection children
+private fun <E> Collection<E>.choice(size: Int): Collection<E> {
+    if (size > this.size) error("Cannot choice $size elements from collection of size ${this.size}")
+    val collection = toMutableList()
+    val rep = mutableListOf<E>()
+    repeat(size) {
+        val next = collection.random()
+        collection.remove(next)
+        rep.add(next)
+    }
+    return rep
 }
