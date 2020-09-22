@@ -35,11 +35,11 @@ class InputNode(var output: Float) : Inputable<Float> {
 }
 
 class NeuralNetwork(
-        private val inputNodes: List<InputNode> = listOf(),
-        private val connexions: Map<Neuron, List<Inputable<Float>>>,
-        private val outputNeurons: List<Neuron>
+    private val inputNodes: List<InputNode> = listOf(),
+    private val connexions: Map<Neuron, List<Inputable<Float>>>,
+    private val outputNeurons: List<Neuron>
 ) {
-    private val outputNeuronsByInputable: Map<Inputable<Float>, List<Neuron>> = buildOutputNeuronsByInputable()
+    private val outputNeuronsByInputable: Map<Inputable<Float>, Set<Neuron>> = buildOutputNeuronsByInputable()
 
     init {
         connexions.forEach { (neuron, inputs) ->
@@ -47,20 +47,24 @@ class NeuralNetwork(
         }
     }
 
-    private fun buildOutputNeuronsByInputable(): Map<Inputable<Float>, List<Neuron>> {
-        val data: MutableMap<Inputable<Float>, MutableList<Neuron>> = mutableMapOf()
+    private fun buildOutputNeuronsByInputable(): Map<Inputable<Float>, Set<Neuron>> {
+        val data: MutableMap<Inputable<Float>, MutableSet<Neuron>> = mutableMapOf()
         for ((neuron, inputs) in connexions) {
             for (input in inputs) {
-                (data.getOrPut(input) { mutableListOf() }).add(neuron)
+                (data.getOrPut(input) { mutableSetOf() }).add(neuron)
             }
         }
         return data
     }
 
+    private fun getOutputNeuronsOf(inputable: Inputable<Float>) : Set<Neuron> {
+        return outputNeuronsByInputable.getOrDefault(inputable, setOf())
+    }
+
     fun compute(inputs: List<Float>, log: Boolean = false): List<Float> {
         val alreadyComputedNeurons = mutableSetOf<Neuron>()
         (inputNodes zip inputs).forEach { it.first.output = it.second }
-        var layer = inputNodes.flatMapTo(mutableSetOf()) { outputNeuronsByInputable[it] ?: error("Output of $it not found") }
+        var layer = inputNodes.flatMapTo(mutableSetOf()) { getOutputNeuronsOf(it) }
         while (layer.isNotEmpty()) {
             if (log) println("---------------------------------------------------")
             for (it in layer) {
@@ -71,7 +75,7 @@ class NeuralNetwork(
             }
             layer.forEach { it.update() }
             layer = layer
-                .flatMap { outputNeuronsByInputable.getOrDefault(it, listOf()) }
+                .flatMap { getOutputNeuronsOf(it) }
                 .filterTo(mutableSetOf()) { it !in alreadyComputedNeurons }
         }
         return outputNeurons.map(Neuron::getOutput)
