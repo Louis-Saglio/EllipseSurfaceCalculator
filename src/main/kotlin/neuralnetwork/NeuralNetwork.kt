@@ -57,7 +57,7 @@ class NeuralNetwork(
         return data
     }
 
-    private fun getOutputNeuronsOf(inputable: Inputable<Float>) : Set<Neuron> {
+    private fun getOutputNeuronsOf(inputable: Inputable<Float>): Set<Neuron> {
         return outputNeuronsByInputable.getOrDefault(inputable, setOf())
     }
 
@@ -67,7 +67,7 @@ class NeuralNetwork(
         var layer = inputNodes.flatMapTo(mutableSetOf()) { getOutputNeuronsOf(it) }
         while (layer.isNotEmpty()) {
             if (log) println("---------------------------------------------------")
-            for (it in layer) {
+            layer.forEach {
                 if (it !in alreadyComputedNeurons) {
                     it.compute((connexions[it] ?: error("Input of $it not found")).map { input -> input.getOutput() }, log)
                     alreadyComputedNeurons.add(it)
