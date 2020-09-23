@@ -71,4 +71,10 @@ class Neuron(private var bias: Float) : Inputable<Float> {
     override fun toString(): String {
         return "${this.javaClass.simpleName}(id=${Identifier.idOf(this)})"
     }
+
+    fun clone(): Neuron {
+        val neuron = Neuron(bias)
+        neuron.weights.addAll(weights)
+        return neuron
+    }
 }

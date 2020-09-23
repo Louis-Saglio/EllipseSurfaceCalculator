@@ -92,9 +92,28 @@ class NeuralNetwork(
         return rows.joinToString("\n")
     }
 
-    fun printGraphPNG(displayWeights: Boolean) {
-        File("nn.dot").writeText(asGraphviz(displayWeights = displayWeights))
-        Runtime.getRuntime().exec("dot -Tpng nn.dot -o neural_network.png")
+    fun printGraphPNG(fileName: String, displayWeights: Boolean) {
+        File("$fileName.dot").writeText(asGraphviz(displayWeights = displayWeights))
+        Runtime.getRuntime().exec("dot -Tpng $fileName.dot -o $fileName.png")
+    }
+
+    fun clone(): NeuralNetwork {
+        val inputNodes = inputNodes.map { InputNode(0f) }
+        val outputNeurons = outputNeurons.map { it.clone() }
+        val neuralNetwork = NeuralNetwork(
+            inputNodes,
+            connexions
+                .map { (neuron, inputables) ->
+                    neuron.clone() to inputables.map {
+                        when (it) {
+                            is Neuron -> it.clone()
+                            else -> inputNodes[this.inputNodes.indexOf(it)]
+                        }
+                    }
+                }.toMap(),
+            outputNeurons,
+        )
+        return neuralNetwork
     }
 
     companion object {
