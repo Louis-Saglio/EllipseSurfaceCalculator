@@ -56,8 +56,6 @@ class Neuron(private var bias: Float) : Inputable<Float> {
         }
     }
 
-    fun getExpectedInputSize() = weights.size
-
     fun asGraphvizNode(color: String? = null): String {
         return "\"${Identifier.idOf(this)}\" [label=\"${Identifier.idOf(this)}\\n${String.format("%.2f", output)}\\n${String.format("%.2f", bias)}\" color=${color ?: "blue"}]"
     }
@@ -76,5 +74,15 @@ class Neuron(private var bias: Float) : Inputable<Float> {
         val neuron = Neuron(bias)
         neuron.weights.addAll(weights)
         return neuron
+    }
+
+    fun mutate() {
+        val index = Random.nextInt(weights.size + 1)
+        val increment = (Random.nextFloat() - 0.5f) * 2
+        if (index < weights.size) {
+            weights[index] += increment
+        } else {
+            bias += increment
+        }
     }
 }

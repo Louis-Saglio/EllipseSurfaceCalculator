@@ -3,6 +3,7 @@ package neuralnetwork
 import java.io.File
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
+import kotlin.random.Random
 
 object Identifier {
     private var lastId = -1
@@ -33,6 +34,8 @@ class InputNode(var output: Float) : Inputable<Float> {
         return "\"${Identifier.idOf(this)}\" [label=\"${String.format("%.2f", output)}\" color=green]"
     }
 }
+
+data class NeuralNetworkState(public val connexions: Map<Neuron, List<Inputable<Float>>>, public val outputNeurons: List<Neuron>)
 
 class NeuralNetwork(
     private val inputNodes: List<InputNode> = listOf(),
@@ -97,23 +100,59 @@ class NeuralNetwork(
         Runtime.getRuntime().exec("dot -Tpng $fileName.dot -o $fileName.png")
     }
 
-    fun clone(): NeuralNetwork {
+    fun clone(mutationProbability: Float): NeuralNetwork {
         val inputNodes = inputNodes.map { InputNode(0f) }
         val outputNeurons = outputNeurons.map { it.clone() }
-        val neuralNetwork = NeuralNetwork(
-            inputNodes,
-            connexions
-                .map { (neuron, inputables) ->
-                    neuron.clone() to inputables.map {
-                        when (it) {
-                            is Neuron -> it.clone()
-                            else -> inputNodes[this.inputNodes.indexOf(it)]
-                        }
-                    }
-                }.toMap(),
-            outputNeurons,
-        )
-        return neuralNetwork
+        val connexions = connexions.map { (neuron, inputables) ->
+            neuron.clone() to inputables.mapTo(mutableListOf()) {
+                when (it) {
+                    is Neuron -> it.clone()
+                    else -> inputNodes[this.inputNodes.indexOf(it)]
+                }
+            }
+        }.toMap(mutableMapOf())
+        if (Random.nextFloat() < mutationProbability) mutate(connexions, outputNeurons)
+        return NeuralNetwork(inputNodes, connexions, outputNeurons)
+    }
+
+    private fun mutateWeightOrBias(connexions: Map<Neuron, List<Inputable<Float>>>) {
+        connexions.keys.random().mutate()
+    }
+
+    private fun removeNeuron(connexions: MutableMap<Neuron, MutableList<Inputable<Float>>>, exclude: List<Neuron>) {
+        connexions.remove(connexions.keys.filter { it in exclude }.random())
+    }
+
+    private fun addNeuron(connexions: MutableMap<Neuron, MutableList<Inputable<Float>>>) {
+        val neuron = Neuron(0f)
+        val (outputNeuron, inputNodes) = connexions.toList().random()
+        inputNodes.add(neuron)
+        // todo output weight should be low
+        outputNeuron.setInputSize(connexions[outputNeuron]!!.size + 1) // Can't fail because outputNeuron is taken from connexions
+        connexions[neuron] = mutableListOf(connexions.values.flatMapTo(mutableSetOf()) { it }.random())
+    }
+
+    private fun removeConnexion(connexions: MutableMap<Neuron, MutableList<Inputable<Float>>>) {
+        val (neuron, inputables) = connexions.toList().random()
+        // todo : do not remove entry point
+        inputables.removeAt((0 until inputables.size).random())
+        neuron.setInputSize(inputables.size)
+    }
+
+    private fun addConnexion(connexions: MutableMap<Neuron, MutableList<Inputable<Float>>>) {
+        val asList = connexions.toList()
+        connexions[asList.random().first]!!.add(asList.random().first)
+    }
+
+    private fun mutate(connexions: MutableMap<Neuron, MutableList<Inputable<Float>>>, outputNeurons: List<Neuron>): NeuralNetworkState {
+        when (Random.nextInt(100)) {
+            in 0 until 80 -> mutateWeightOrBias(connexions)
+            in 80 until 85 -> removeNeuron(connexions, outputNeurons)
+            in 85 until 90 -> addNeuron(connexions)
+            in 90 until 95 -> removeConnexion(connexions)
+            in 95 until 100 -> addConnexion(connexions)
+        }
+        return NeuralNetworkState(connexions, outputNeurons)
     }
 
     companion object {
