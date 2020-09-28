@@ -10,8 +10,8 @@ fun main() {
         outputNbr = 2
     )
     println(neuralNetwork.compute(listOf(2f, 3f), true))
-    neuralNetwork.printGraphPNG("neuralNetwork", true)
     val individual = GeneticNeuralNetwork(neuralNetwork)
-    individual.clone()
-    individual.printAsPNG("clone", true)
+    val clone = individual.clone(1f)
+    individual.printAsPNG("original", true)
+    clone.printAsPNG("clone", true)
 }

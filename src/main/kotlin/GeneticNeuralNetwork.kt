@@ -1,13 +1,13 @@
 import genetic.Individual
 import neuralnetwork.NeuralNetwork
 
-class GeneticNeuralNetwork(private val neuralNetwork: NeuralNetwork) : Individual {
+class GeneticNeuralNetwork(private val neuralNetwork: NeuralNetwork) : Individual<GeneticNeuralNetwork> {
 
     override fun fitness(): Float {
         TODO("Not yet implemented")
     }
 
-    override fun clone(mutationProbability: Float): Individual {
+    override fun clone(mutationProbability: Float): GeneticNeuralNetwork {
         return GeneticNeuralNetwork(neuralNetwork.clone(mutationProbability))
     }
 

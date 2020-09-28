@@ -35,7 +35,10 @@ class InputNode(var output: Float) : Inputable<Float> {
     }
 }
 
-data class NeuralNetworkState(public val connexions: Map<Neuron, List<Inputable<Float>>>, public val outputNeurons: List<Neuron>)
+data class NeuralNetworkMutableState(
+    val connexions: MutableMap<Neuron, MutableList<Inputable<Float>>>,
+    val outputNeurons: List<Neuron>
+)
 
 class NeuralNetwork(
     private val inputNodes: List<InputNode> = listOf(),
@@ -72,7 +75,10 @@ class NeuralNetwork(
             if (log) println("---------------------------------------------------")
             layer.forEach {
                 if (it !in alreadyComputedNeurons) {
-                    it.compute((connexions[it] ?: error("Input of $it not found")).map { input -> input.getOutput() }, log)
+                    it.compute(
+                        inputs = (connexions[it] ?: error("Input of $it not found")).map { input -> input.getOutput() },
+                        log = log
+                    )
                     alreadyComputedNeurons.add(it)
                 }
             }
@@ -102,8 +108,8 @@ class NeuralNetwork(
 
     fun clone(mutationProbability: Float): NeuralNetwork {
         val inputNodes = inputNodes.map { InputNode(0f) }
-        val outputNeurons = outputNeurons.map { it.clone() }
-        val connexions = connexions.map { (neuron, inputables) ->
+        var outputNeurons = outputNeurons.map { it.clone() }
+        var connexions = connexions.map { (neuron, inputables) ->
             neuron.clone() to inputables.mapTo(mutableListOf()) {
                 when (it) {
                     is Neuron -> it.clone()
@@ -111,7 +117,11 @@ class NeuralNetwork(
                 }
             }
         }.toMap(mutableMapOf())
-        if (Random.nextFloat() < mutationProbability) mutate(connexions, outputNeurons)
+        if (Random.nextFloat() < mutationProbability) {
+            val state = mutate(connexions, outputNeurons)
+            connexions = state.connexions
+            outputNeurons = state.outputNeurons
+        }
         return NeuralNetwork(inputNodes, connexions, outputNeurons)
     }
 
@@ -144,7 +154,7 @@ class NeuralNetwork(
         connexions[asList.random().first]!!.add(asList.random().first)
     }
 
-    private fun mutate(connexions: MutableMap<Neuron, MutableList<Inputable<Float>>>, outputNeurons: List<Neuron>): NeuralNetworkState {
+    private fun mutate(connexions: MutableMap<Neuron, MutableList<Inputable<Float>>>, outputNeurons: List<Neuron>): NeuralNetworkMutableState {
         when (Random.nextInt(100)) {
             in 0 until 80 -> mutateWeightOrBias(connexions)
             in 80 until 85 -> removeNeuron(connexions, outputNeurons)
@@ -152,7 +162,7 @@ class NeuralNetwork(
             in 90 until 95 -> removeConnexion(connexions)
             in 95 until 100 -> addConnexion(connexions)
         }
-        return NeuralNetworkState(connexions, outputNeurons)
+        return NeuralNetworkMutableState(connexions, outputNeurons)
     }
 
     companion object {
