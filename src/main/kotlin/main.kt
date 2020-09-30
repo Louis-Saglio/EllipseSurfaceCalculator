@@ -11,10 +11,10 @@ fun main() {
             outputNbr = 2
         )
     )
-    val clone = individual.clone(0f)
     individual.printAsPNG("original", true)
+    val clone = individual.clone(0f)
     clone.printAsPNG("clone", true)
     val inputs = listOf(2f, 3f)
-    println(individual.innerInstance.compute(inputs, true))
-    println(clone.innerInstance.compute(inputs, true))
+    individual.innerInstance.compute(inputs, true)
+    clone.innerInstance.compute(inputs, true)
 }

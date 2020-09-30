@@ -87,6 +87,7 @@ class NeuralNetwork(
                 .flatMap { getOutputNeuronsOf(it) }
                 .filterTo(mutableSetOf()) { it !in alreadyComputedNeurons }
         }
+        if (log) println("===================================================")
         return outputNeurons.map(Neuron::getOutput)
     }
 
@@ -108,20 +109,19 @@ class NeuralNetwork(
 
     fun clone(mutationProbability: Float): NeuralNetwork {
         val inputNodes = inputNodes.map { InputNode(0f) }
-        var outputNeurons = outputNeurons.map { it.clone() }
-        var connexions = connexions.map { (neuron, inputables) ->
-            neuron.clone() to inputables.mapTo(mutableListOf()) {
+        val cloneByNeuron = mutableMapOf<Neuron, Neuron>()
+        val outputNeurons = outputNeurons.map { cloneByNeuron.getOrPut(it) { it.clone() } }
+        val connexions = connexions.map { (neuron, inputs) ->
+            val newNeuron = cloneByNeuron.getOrPut(neuron) { neuron.clone() }
+            val newInputs = inputs.map {
                 when (it) {
-                    is Neuron -> it.clone()
-                    else -> inputNodes[this.inputNodes.indexOf(it)]
+                    is Neuron -> cloneByNeuron.getOrPut(it) { it.clone() }
+                    is InputNode -> inputNodes[this.inputNodes.indexOf(it)]
+                    else -> error("should not happen")
                 }
             }
-        }.toMap(mutableMapOf())
-        if (Random.nextFloat() < mutationProbability) {
-            val state = mutate(connexions, outputNeurons)
-            connexions = state.connexions
-            outputNeurons = state.outputNeurons
-        }
+            newNeuron to newInputs
+        }.toMap()
         return NeuralNetwork(inputNodes, connexions, outputNeurons)
     }
 
