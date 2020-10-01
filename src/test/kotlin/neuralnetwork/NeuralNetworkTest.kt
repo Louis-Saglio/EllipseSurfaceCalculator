@@ -14,14 +14,14 @@ internal class NeuralNetworkTest {
         val n2 = Neuron(0f)
         val nn = NeuralNetwork(
             listOf(i0, i1),
-            mapOf(
-                n0 to listOf(i0, i1),
-                n1 to listOf(i0, i1),
-                n2 to listOf(n0, n1)
+            mutableMapOf(
+                n0 to mutableListOf(i0, i1),
+                n1 to mutableListOf(i0, i1),
+                n2 to mutableListOf(n0, n1)
             ),
             listOf(n2),
         )
-        val clone = nn.clone(0f)
+        val clone = nn.clone()
 
         assertEquals(nn.compute(listOf(0f, 1f)), clone.compute(listOf(0f, 1f)))
     }
