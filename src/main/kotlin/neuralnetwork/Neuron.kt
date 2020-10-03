@@ -37,7 +37,7 @@ class Neuron(private var bias: Float) : Inputable<Float> {
     fun setInputSize(size: Int) {
         if (size > weights.size) {
             repeat(size - weights.size) {
-                weights.add(Random.nextFloat())
+                weights.add(random.nextFloat())
             }
         } else if (size < weights.size) {
             repeat(weights.size - size) {
@@ -77,8 +77,8 @@ class Neuron(private var bias: Float) : Inputable<Float> {
     }
 
     fun mutate() {
-        val index = Random.nextInt(weights.size + 1)
-        val increment = (Random.nextFloat() - 0.5f) * 2
+        val index = random.nextInt(weights.size + 1)
+        val increment = (random.nextFloat() - 0.5f) * 2
         if (index < weights.size) {
             weights[index] += increment
         } else {

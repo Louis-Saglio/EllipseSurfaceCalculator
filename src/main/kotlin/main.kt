@@ -27,12 +27,12 @@ fun main() {
         )
     )
     individual.printAsPNG("original", true)
-    val population = (0 until 100).map { individual.clone() }
+    val population = (0 until 200).map { individual.clone() }
     val winner = evolve(population, 100, true).minByOrNull { it.fitness() }
     if (winner != null) {
-        winner.innerInstance.printGraphPNG("winner", true)
         val a = (0 until 100).random().toFloat()
         val b = (0 until 100).random().toFloat()
         println("$a + $b == ${winner.innerInstance.compute(listOf(a, b))}")
+        winner.innerInstance.printGraphPNG("winner", true)
     }
 }

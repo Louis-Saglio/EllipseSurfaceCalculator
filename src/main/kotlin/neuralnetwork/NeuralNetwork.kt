@@ -5,6 +5,8 @@ import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 import kotlin.random.Random
 
+val random = Random(0)
+
 object Identifier {
     private var lastId = -1
     private val idLock = ReentrantLock()
@@ -40,7 +42,7 @@ class NeuralNetwork(
     private val connexions: MutableMap<Neuron, MutableList<Inputable<Float>>>,
     private val outputNeurons: List<Neuron>
 ) {
-    private val outputNeuronsByInputable: Map<Inputable<Float>, Set<Neuron>> = buildOutputNeuronsByInputable()
+    private val outputNeuronsByInputable: MutableMap<Inputable<Float>, MutableSet<Neuron>> = buildOutputNeuronsByInputable()
 
     init {
         connexions.forEach { (neuron, inputs) ->
@@ -48,18 +50,19 @@ class NeuralNetwork(
         }
     }
 
-    private fun buildOutputNeuronsByInputable(): Map<Inputable<Float>, Set<Neuron>> {
+    private fun buildOutputNeuronsByInputable(): MutableMap<Inputable<Float>, MutableSet<Neuron>> {
         val data: MutableMap<Inputable<Float>, MutableSet<Neuron>> = mutableMapOf()
         for ((neuron, inputs) in connexions) {
+            data.getOrPut(neuron) { mutableSetOf() }
             for (input in inputs) {
-                (data.getOrPut(input) { mutableSetOf() }).add(neuron)
+                data.getOrPut(input) { mutableSetOf() }.add(neuron)
             }
         }
         return data
     }
 
     private fun getOutputNeuronsOf(inputable: Inputable<Float>): Set<Neuron> {
-        return outputNeuronsByInputable.getOrDefault(inputable, setOf())
+        return outputNeuronsByInputable.getOrDefault(inputable, mutableSetOf())
     }
 
     fun compute(inputs: List<Float>, log: Boolean = false): List<Float> {
@@ -121,41 +124,56 @@ class NeuralNetwork(
     }
 
     private fun mutateWeightOrBias() {
-        connexions.keys.random().mutate()
+        connexions.keys.random(random).mutate()
     }
 
-    private fun removeNeuron() {
-        connexions.remove(connexions.keys.filter { it !in outputNeurons }.random())
+    private fun removeNeuron(neuron: Neuron) {
+        // todo: optimize by crossing data from connexions and outputNeuronsByInputable
+        connexions.remove(neuron)
+        connexions.forEach { (output, inputs) ->
+            inputs.remove(neuron)
+            output.setInputSize(inputs.size)
+        }
+        outputNeuronsByInputable.remove(neuron)
+        outputNeuronsByInputable.forEach { (_, neurons) -> neurons.remove(neuron) }
     }
 
-    private fun addNeuron() {
+    private fun addNeuron(inputs: MutableList<Inputable<Float>>, outputs: MutableSet<Neuron>) {
         val neuron = Neuron(0f)
-        val (outputNeuron, inputNodes) = connexions.toList().random()
-        inputNodes.add(neuron)
-        // todo output weight should be low
-        outputNeuron.setInputSize(connexions[outputNeuron]!!.size + 1) // Can't fail because outputNeuron is taken from connexions
-        connexions[neuron] = mutableListOf(connexions.values.flatMapTo(mutableSetOf()) { it }.random())
+        neuron.setInputSize(inputs.size)
+        connexions[neuron] = inputs
+        outputNeuronsByInputable[neuron] = outputs
+        outputs.forEach {
+            val outputInputs = connexions[it] ?: error("Output $it not found in this NeuralNetwork")
+            outputInputs.add(neuron)
+            it.setInputSize(inputs.size)
+        }
+        inputs.forEach {
+            outputNeuronsByInputable.getOrElse(it) { error("Input $it not found in this NeuralNetwork") }.add(neuron)
+        }
     }
 
-    private fun removeConnexion() {
-        val (neuron, inputables) = connexions.toList().random()
-        // todo : do not remove entry point
-        inputables.removeAt((0 until inputables.size).random())
-        neuron.setInputSize(inputables.size)
+    private fun removeConnexion(from: Inputable<Float>, to: Neuron) {
+        connexions[to]!!.remove(from)
+        outputNeuronsByInputable[from]!!.remove(to)
     }
 
-    private fun addConnexion() {
-        val asList = connexions.keys.toList()
-        connexions[asList.random()]!!.add(asList.random())
+    private fun addConnexion(from: Inputable<Float>, to: Neuron) {
+        connexions[to]!!.add(from)
+        outputNeuronsByInputable[from]!!.add(to)
     }
 
     fun mutate() {
-        when (Random.nextInt(100)) {
+        when (random.nextInt(100)) {
             in 0 until 80 -> mutateWeightOrBias()
-//            in 80 until 85 -> removeNeuron()
-//            in 85 until 90 -> addNeuron()
-//            in 90 until 95 -> removeConnexion()
-//            in 95 until 100 -> addConnexion()
+            // TODO: exception when collection is empty
+            in 80 until 85 -> removeNeuron(connexions.keys.filter { it !in outputNeurons }.random(random))
+            in 85 until 90 -> {
+                val neurons = outputNeuronsByInputable.values.flatMapTo(mutableSetOf()) { it }
+                addNeuron((neurons + inputNodes).choice(2).toMutableList(), neurons)
+            }
+//            in 90 until 95 -> removeConnexion(outputNeuronsByInputable.keys.random(random), connexions.keys.random(random))
+//            in 95 until 100 -> addConnexion(outputNeuronsByInputable.keys.random(random), connexions.keys.random(random))
         }
     }
 

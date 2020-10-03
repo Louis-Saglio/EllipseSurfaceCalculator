@@ -13,6 +13,7 @@ fun <G, T : Individual<G, T>> evolve(
     log: Boolean = false
 ): List<T> {
     var population = mutableListOf<T>()
+    @Suppress("UNCHECKED_CAST")
     population.addAll(individuals as Collection<T>)
     for (generationIndex in 0 until generationNumber) {
         population = population
