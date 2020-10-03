@@ -146,7 +146,7 @@ class NeuralNetwork(
         outputs.forEach {
             val outputInputs = connexions[it] ?: error("Output $it not found in this NeuralNetwork")
             outputInputs.add(neuron)
-            it.setInputSize(inputs.size)
+            it.setInputSize(outputInputs.size)
         }
         inputs.forEach {
             outputNeuronsByInputable.getOrElse(it) { error("Input $it not found in this NeuralNetwork") }.add(neuron)
@@ -164,13 +164,13 @@ class NeuralNetwork(
     }
 
     fun mutate() {
-        when (random.nextInt(100)) {
+        when (random.nextInt(1000)) {
             in 0 until 80 -> mutateWeightOrBias()
             // TODO: exception when collection is empty
             in 80 until 85 -> removeNeuron(connexions.keys.filter { it !in outputNeurons }.random(random))
             in 85 until 90 -> {
-                val neurons = outputNeuronsByInputable.values.flatMapTo(mutableSetOf()) { it }
-                addNeuron((neurons + inputNodes).choice(2).toMutableList(), neurons)
+                val neurons = outputNeuronsByInputable.values.flatten()
+                addNeuron((neurons + inputNodes).choice(2).toMutableList(), neurons.choice(2).toMutableSet())
             }
 //            in 90 until 95 -> removeConnexion(outputNeuronsByInputable.keys.random(random), connexions.keys.random(random))
 //            in 95 until 100 -> addConnexion(outputNeuronsByInputable.keys.random(random), connexions.keys.random(random))
