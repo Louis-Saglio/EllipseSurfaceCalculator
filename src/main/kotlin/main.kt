@@ -32,7 +32,7 @@ fun main() {
     if (winner != null) {
         val a = (0 until 100).random().toFloat()
         val b = (0 until 100).random().toFloat()
-        println("$a + $b == ${winner.innerInstance.compute(listOf(a, b))}")
+        println("$a + $b == ${winner.innerInstance.compute(listOf(a, b), true)}")
         winner.innerInstance.printGraphPNG("winner", true)
     }
 }

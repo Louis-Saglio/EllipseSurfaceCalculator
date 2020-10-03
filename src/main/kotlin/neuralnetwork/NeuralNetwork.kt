@@ -156,15 +156,17 @@ class NeuralNetwork(
     private fun removeConnexion(from: Inputable<Float>, to: Neuron) {
         connexions[to]!!.remove(from)
         outputNeuronsByInputable[from]!!.remove(to)
+        to.setInputSize(connexions[to]!!.size)
     }
 
     private fun addConnexion(from: Inputable<Float>, to: Neuron) {
         connexions[to]!!.add(from)
         outputNeuronsByInputable[from]!!.add(to)
+        to.setInputSize(connexions[to]!!.size)
     }
 
     fun mutate() {
-        when (random.nextInt(1000)) {
+        when (random.nextInt(100)) {
             in 0 until 80 -> mutateWeightOrBias()
             // TODO: exception when collection is empty
             in 80 until 85 -> removeNeuron(connexions.keys.filter { it !in outputNeurons }.random(random))
@@ -172,8 +174,14 @@ class NeuralNetwork(
                 val neurons = outputNeuronsByInputable.values.flatten()
                 addNeuron((neurons + inputNodes).choice(2).toMutableList(), neurons.choice(2).toMutableSet())
             }
-//            in 90 until 95 -> removeConnexion(outputNeuronsByInputable.keys.random(random), connexions.keys.random(random))
-//            in 95 until 100 -> addConnexion(outputNeuronsByInputable.keys.random(random), connexions.keys.random(random))
+            in 90 until 95 -> removeConnexion(
+                outputNeuronsByInputable.keys.filter { it !is InputNode }.random(random),
+                connexions.keys.random(random)
+            )
+            in 95 until 100 -> addConnexion(
+                outputNeuronsByInputable.keys.filter { it !is InputNode }.random(random),
+                connexions.keys.random(random)
+            )
         }
     }
 
