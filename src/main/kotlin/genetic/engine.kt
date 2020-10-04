@@ -19,7 +19,7 @@ fun <G, T : Individual<G, T>> evolve(
         population = population
             .onEach { it.mutate() }
             .sortedBy(Individual<G, T>::fitness)
-            .subList(population.size / 2, population.size)
+            .subList(0, population.size / 2)
             .flatMapTo(mutableListOf()) { listOf(it.clone(), it.clone()) }
         if (log) println(population.map(Individual<G, T>::fitness).average())
     }

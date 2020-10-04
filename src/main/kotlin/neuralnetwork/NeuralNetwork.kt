@@ -43,6 +43,8 @@ class NeuralNetwork(
     private val outputNeurons: List<Neuron>
 ) {
     private val outputNeuronsByInputable: MutableMap<Inputable<Float>, MutableSet<Neuron>> = buildOutputNeuronsByInputable()
+    private val neurons
+        get() = outputNeuronsByInputable.values.flatten().toMutableSet()
 
     init {
         connexions.forEach { (neuron, inputs) ->
@@ -123,10 +125,6 @@ class NeuralNetwork(
         return NeuralNetwork(inputNodes, connexions, outputNeurons)
     }
 
-    private fun mutateWeightOrBias() {
-        connexions.keys.random(random).mutate()
-    }
-
     private fun removeNeuron(neuron: Neuron) {
         // todo: optimize by crossing data from connexions and outputNeuronsByInputable
         connexions.remove(neuron)
@@ -166,12 +164,18 @@ class NeuralNetwork(
     }
 
     fun mutate() {
+        if (neurons.size < 2) return
         when (random.nextInt(100)) {
-            in 0 until 80 -> mutateWeightOrBias()
+            in 0 until 80 -> {
+                val neuron = neurons.random()
+                neuron.mutateWeightOrBias(
+                    (0..connexions[neuron]!!.size).random(random),
+                    (random.nextFloat() * 2) - 1
+                )
+            }
             // TODO: exception when collection is empty
-            in 80 until 85 -> removeNeuron(connexions.keys.filter { it !in outputNeurons }.random(random))
+            in 80 until 85 -> removeNeuron(neurons.filter { it !in outputNeurons }.random(random))
             in 85 until 90 -> {
-                val neurons = outputNeuronsByInputable.values.flatten()
                 addNeuron((neurons + inputNodes).choice(2).toMutableList(), neurons.choice(2).toMutableSet())
             }
             in 90 until 95 -> removeConnexion(

@@ -3,7 +3,6 @@ package neuralnetwork
 import java.lang.RuntimeException
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
-import kotlin.random.Random
 
 interface Inputable<T> {
     fun getOutput(): T
@@ -76,13 +75,11 @@ class Neuron(private var bias: Float) : Inputable<Float> {
         return neuron
     }
 
-    fun mutate() {
-        val index = random.nextInt(weights.size + 1)
-        val increment = (random.nextFloat() - 0.5f) * 2
-        if (index < weights.size) {
-            weights[index] += increment
-        } else {
-            bias += increment
+    fun mutateWeightOrBias(weightIndex: Int, delta: Float) {
+        when {
+            weightIndex < weights.size -> weights[weightIndex] += delta
+            weightIndex == weights.size -> bias += delta
+            else -> error("weightIndex too high : $weightIndex, max : ${weights.size}")
         }
     }
 }

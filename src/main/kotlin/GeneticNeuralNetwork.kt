@@ -2,7 +2,7 @@ import genetic.Individual
 import neuralnetwork.NeuralNetwork
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
-import kotlin.math.abs
+import kotlin.math.pow
 
 class GeneticNeuralNetwork(
     override val innerInstance: NeuralNetwork
@@ -13,9 +13,16 @@ class GeneticNeuralNetwork(
     override fun fitness(): Float {
         fitnessLock.withLock {
             if (fitness == null) {
-                val a = (0 until 100).random().toFloat()
-                val b = (0 until 100).random().toFloat()
-                fitness = 1 / abs(innerInstance.compute(listOf(a, b))[0] - (a + b))
+                val results = mutableSetOf<Float>()
+                repeat(10) {
+                    val a = (0 until 100).random().toFloat()
+                    val b = (0 until 100).random().toFloat()
+                    val expectedResult = a + b
+                    val prediction = innerInstance.compute(listOf(a, b))[0]
+                    val squaredError = (expectedResult - prediction).pow(2)
+                    results.add(squaredError)
+                }
+                fitness = results.average().toFloat()
             }
             return fitness!!
         }
