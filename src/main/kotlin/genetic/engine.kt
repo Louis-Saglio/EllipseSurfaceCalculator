@@ -5,12 +5,14 @@ interface Individual<G, T : Individual<G, T>> {
     fun fitness(): Float
     fun clone(): T
     fun mutate()
+    fun print()
 }
 
 fun <G, T : Individual<G, T>> evolve(
     individuals: List<Individual<G, T>>,
     generationNumber: Int,
-    log: Boolean = false
+    log: Boolean = false,
+    print: Boolean = false
 ): List<T> {
     var population = mutableListOf<T>()
     @Suppress("UNCHECKED_CAST")
@@ -22,6 +24,7 @@ fun <G, T : Individual<G, T>> evolve(
             .subList(0, population.size / 2)
             .flatMapTo(mutableListOf()) { listOf(it.clone(), it.clone()) }
         if (log) println(population.map(Individual<G, T>::fitness).average())
+        if (print) population.maxByOrNull { it.fitness() }?.print()
     }
     return population
 }

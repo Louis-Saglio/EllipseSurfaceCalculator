@@ -1,4 +1,5 @@
 import genetic.Individual
+import neuralnetwork.Identifier
 import neuralnetwork.NeuralNetwork
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
@@ -32,11 +33,20 @@ class GeneticNeuralNetwork(
         return GeneticNeuralNetwork(innerInstance.clone())
     }
 
-    fun printAsPNG(fileName: String, displayWeights: Boolean) {
-        innerInstance.printGraphPNG(fileName, displayWeights)
+    fun printAsPNG(fileName: String, displayWeights: Boolean, removeDotFile: Boolean, displayId: Boolean) {
+        innerInstance.printGraphPNG(fileName, displayWeights, removeDotFile, displayId)
     }
 
     override fun mutate() {
         innerInstance.mutate()
+    }
+
+    override fun print() {
+        innerInstance.printGraphPNG(
+            "data/individual${Identifier.idOf(this)}.png",
+            displayWeights = true,
+            removeDotFile = true,
+                displayId = false
+        )
     }
 }

@@ -55,8 +55,10 @@ class Neuron(private var bias: Float) : Inputable<Float> {
         }
     }
 
-    fun asGraphvizNode(color: String? = null): String {
-        return "\"${Identifier.idOf(this)}\" [label=\"${Identifier.idOf(this)}\\n${String.format("%.2f", output)}\\n${String.format("%.2f", bias)}\" color=${color ?: "blue"}]"
+    fun asGraphvizNode(color: String? = null, displayId: Boolean): String {
+        val id = if (displayId) Identifier.idOf(this).toString() else ""
+        val bias = String.format("%.2f", bias)
+        return "\"${Identifier.idOf(this)}\" [label=${listOf(id, bias, color ?: "blue").joinToString("\\n")}]"
     }
 
     fun asGraphvizLinks(inputs: Collection<Any>, displayWeights: Boolean = true): List<String> {

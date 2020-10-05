@@ -8,6 +8,7 @@ import kotlin.random.Random
 val random = Random(0)
 
 object Identifier {
+    // May cause memory leak
     private var lastId = -1
     private val idLock = ReentrantLock()
     private val idByObjectLock = ReentrantLock()
@@ -39,22 +40,22 @@ class InputNode(var output: Float) : Inputable<Float> {
 
 class NeuralNetwork(
     private val inputNodes: List<InputNode> = listOf(),
-    private val connexions: MutableMap<Neuron, MutableList<Inputable<Float>>>,
+    private val inputsByNeuron: MutableMap<Neuron, MutableList<Inputable<Float>>>,
     private val outputNeurons: List<Neuron>
 ) {
-    private val outputNeuronsByInputable: MutableMap<Inputable<Float>, MutableSet<Neuron>> = buildOutputNeuronsByInputable()
+    private val outputNeuronsByInput: MutableMap<Inputable<Float>, MutableSet<Neuron>> = buildOutputNeuronsByInput()
     private val neurons
-        get() = outputNeuronsByInputable.values.flatten().toMutableSet()
+        get() = outputNeuronsByInput.values.flatten().toMutableSet()
 
     init {
-        connexions.forEach { (neuron, inputs) ->
+        inputsByNeuron.forEach { (neuron, inputs) ->
             neuron.setInputSize(inputs.size)
         }
     }
 
-    private fun buildOutputNeuronsByInputable(): MutableMap<Inputable<Float>, MutableSet<Neuron>> {
+    private fun buildOutputNeuronsByInput(): MutableMap<Inputable<Float>, MutableSet<Neuron>> {
         val data: MutableMap<Inputable<Float>, MutableSet<Neuron>> = mutableMapOf()
-        for ((neuron, inputs) in connexions) {
+        for ((neuron, inputs) in inputsByNeuron) {
             data.getOrPut(neuron) { mutableSetOf() }
             for (input in inputs) {
                 data.getOrPut(input) { mutableSetOf() }.add(neuron)
@@ -64,7 +65,7 @@ class NeuralNetwork(
     }
 
     private fun getOutputNeuronsOf(inputable: Inputable<Float>): Set<Neuron> {
-        return outputNeuronsByInputable.getOrDefault(inputable, mutableSetOf())
+        return outputNeuronsByInput.getOrDefault(inputable, mutableSetOf())
     }
 
     fun compute(inputs: List<Float>, log: Boolean = false): List<Float> {
@@ -76,7 +77,7 @@ class NeuralNetwork(
             layer.forEach {
                 if (it !in alreadyComputedNeurons) {
                     it.compute(
-                        inputs = (connexions[it] ?: error("Input of $it not found")).map { input -> input.getOutput() },
+                        inputs = (inputsByNeuron[it] ?: error("Input of $it not found")).map { input -> input.getOutput() },
                         log = log
                     )
                     alreadyComputedNeurons.add(it)
@@ -91,27 +92,31 @@ class NeuralNetwork(
         return outputNeurons.map(Neuron::getOutput)
     }
 
-    private fun asGraphviz(displayWeights: Boolean = true): String {
+    private fun asGraphviz(displayWeights: Boolean = true, displayId: Boolean): String {
         val rows = mutableListOf("digraph {rankdir=LR")
         inputNodes.forEach { rows.add(it.asGraphvizNode()) }
-        connexions.forEach { (output, inputs) ->
-            rows.add(output.asGraphvizNode(if (output in outputNeurons) "red" else null))
+        inputsByNeuron.forEach { (output, inputs) ->
+            rows.add(output.asGraphvizNode(if (output in outputNeurons) "red" else null, displayId))
             rows.addAll(output.asGraphvizLinks(inputs, displayWeights))
         }
         rows.add("}")
         return rows.joinToString("\n")
     }
 
-    fun printGraphPNG(fileName: String, displayWeights: Boolean) {
-        File("$fileName.dot").writeText(asGraphviz(displayWeights = displayWeights))
+    fun printGraphPNG(fileName: String, displayWeights: Boolean, removeDotFile: Boolean, displayId: Boolean) {
+        val dotFile = File("$fileName.dot")
+        dotFile.writeText(asGraphviz(displayWeights = displayWeights, displayId))
         Runtime.getRuntime().exec("dot -Tpng $fileName.dot -o $fileName.png")
+        if (removeDotFile) {
+            dotFile.deleteOnExit()
+        }
     }
 
     fun clone(): NeuralNetwork {
         val inputNodes = inputNodes.map { InputNode(0f) }
         val cloneByNeuron = mutableMapOf<Neuron, Neuron>()
         val outputNeurons = outputNeurons.map { cloneByNeuron.getOrPut(it) { it.clone() } }
-        val connexions = connexions.map { (neuron, inputs) ->
+        val connexions = inputsByNeuron.map { (neuron, inputs) ->
             val newNeuron = cloneByNeuron.getOrPut(neuron) { neuron.clone() }
             val newInputs = inputs.mapTo(mutableListOf()) {
                 when (it) {
@@ -127,40 +132,35 @@ class NeuralNetwork(
 
     private fun removeNeuron(neuron: Neuron) {
         // todo: optimize by crossing data from connexions and outputNeuronsByInputable
-        connexions.remove(neuron)
-        connexions.forEach { (output, inputs) ->
+        inputsByNeuron.remove(neuron)
+        inputsByNeuron.forEach { (output, inputs) ->
             inputs.remove(neuron)
             output.setInputSize(inputs.size)
         }
-        outputNeuronsByInputable.remove(neuron)
-        outputNeuronsByInputable.forEach { (_, neurons) -> neurons.remove(neuron) }
+        outputNeuronsByInput.remove(neuron)
+        outputNeuronsByInput.forEach { (_, neurons) -> neurons.remove(neuron) }
     }
 
     private fun addNeuron(inputs: MutableList<Inputable<Float>>, outputs: MutableSet<Neuron>) {
         val neuron = Neuron(0f)
-        neuron.setInputSize(inputs.size)
-        connexions[neuron] = inputs
-        outputNeuronsByInputable[neuron] = outputs
-        outputs.forEach {
-            val outputInputs = connexions[it] ?: error("Output $it not found in this NeuralNetwork")
-            outputInputs.add(neuron)
-            it.setInputSize(outputInputs.size)
-        }
-        inputs.forEach {
-            outputNeuronsByInputable.getOrElse(it) { error("Input $it not found in this NeuralNetwork") }.add(neuron)
-        }
+        inputsByNeuron[neuron] = mutableListOf()
+        outputNeuronsByInput[neuron] = mutableSetOf()
+        inputs.forEach { addConnexion(it, neuron) }
+        outputs.forEach { addConnexion(neuron, it) }
     }
 
     private fun removeConnexion(from: Inputable<Float>, to: Neuron) {
-        connexions[to]!!.remove(from)
-        outputNeuronsByInputable[from]!!.remove(to)
-        to.setInputSize(connexions[to]!!.size)
+        val inputs = inputsByNeuron[to] ?: error("Neuron not found")
+        inputs.remove(from)
+        (outputNeuronsByInput[from] ?: error("Input not found")).remove(to)
+        to.setInputSize(inputs.size)
     }
 
     private fun addConnexion(from: Inputable<Float>, to: Neuron) {
-        connexions[to]!!.add(from)
-        outputNeuronsByInputable[from]!!.add(to)
-        to.setInputSize(connexions[to]!!.size)
+        val inputs = inputsByNeuron[to] ?: error("Neuron not found")
+        inputs.add(from)
+        (outputNeuronsByInput[from] ?: error("Input not found")).add(to)
+        to.setInputSize(inputs.size)
     }
 
     fun mutate() {
@@ -169,22 +169,22 @@ class NeuralNetwork(
             in 0 until 80 -> {
                 val neuron = neurons.random()
                 neuron.mutateWeightOrBias(
-                    (0..connexions[neuron]!!.size).random(random),
+                    (0..inputsByNeuron[neuron]!!.size).random(random),
                     (random.nextFloat() * 2) - 1
                 )
             }
             // TODO: exception when collection is empty
-            in 80 until 85 -> removeNeuron(neurons.filter { it !in outputNeurons }.random(random))
-            in 85 until 90 -> {
+//            in 80 until 85 -> removeNeuron(neurons.filter { it !in outputNeurons }.random(random))
+            in 80 until 85 -> {
                 addNeuron((neurons + inputNodes).choice(2).toMutableList(), neurons.choice(2).toMutableSet())
             }
-            in 90 until 95 -> removeConnexion(
-                outputNeuronsByInputable.keys.filter { it !is InputNode }.random(random),
-                connexions.keys.random(random)
+            in 85 until 95 -> removeConnexion(
+                outputNeuronsByInput.keys.filter { it !is InputNode }.random(random),
+                inputsByNeuron.keys.random(random)
             )
             in 95 until 100 -> addConnexion(
-                outputNeuronsByInputable.keys.filter { it !is InputNode }.random(random),
-                connexions.keys.random(random)
+                outputNeuronsByInput.keys.filter { it !is InputNode }.random(random),
+                inputsByNeuron.keys.random(random)
             )
         }
     }
