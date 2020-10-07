@@ -1,33 +1,31 @@
 import genetic.Individual
-import neuralnetwork.Identifier
+import genetic.Problem
 import neuralnetwork.NeuralNetwork
-import java.util.concurrent.locks.ReentrantLock
-import kotlin.concurrent.withLock
+import neuralnetwork.random
 import kotlin.math.pow
 
-class GeneticNeuralNetwork(
-    override val innerInstance: NeuralNetwork
-) : Individual<NeuralNetwork, GeneticNeuralNetwork> {
-    private var fitness: Float? = null
-    private val fitnessLock = ReentrantLock()
+abstract class NeuralNetworkProblem : Problem<List<Float>, List<Float>>() {
 
-    override fun fitness(): Float {
-        fitnessLock.withLock {
-            if (fitness == null) {
-                val results = mutableSetOf<Float>()
-                repeat(10) {
-                    val a = (0 until 100).random().toFloat()
-                    val b = (0 until 100).random().toFloat()
-                    val expectedResult = a + b
-                    val prediction = innerInstance.compute(listOf(a, b))[0]
-                    val squaredError = (expectedResult - prediction).pow(2)
-                    results.add(squaredError)
-                }
-                fitness = results.average().toFloat()
-            }
-            return fitness!!
-        }
+    override fun computeError(predictions: List<Float>, expectedOutput: List<Float>): Float {
+        return (expectedOutput zip predictions).map { (output, prediction) -> (output - prediction).pow(2) }.average().toFloat()
     }
+}
+
+class Addition : NeuralNetworkProblem() {
+    private var a = 0f
+    private var b = 0f
+    override fun getInput(): List<Float> {
+        a = (-100..100).random(random).toFloat()
+        b = (-100..100).random(random).toFloat()
+        return listOf(a, b)
+    }
+
+    override fun getOutput(): List<Float> {
+        return listOf(a + b)
+    }
+}
+
+class GeneticNeuralNetwork(val innerInstance: NeuralNetwork) : Individual<GeneticNeuralNetwork, List<Float>, List<Float>>(Addition()) {
 
     override fun clone(): GeneticNeuralNetwork {
         return GeneticNeuralNetwork(innerInstance.clone())
@@ -41,12 +39,7 @@ class GeneticNeuralNetwork(
         innerInstance.mutate()
     }
 
-    override fun print() {
-        innerInstance.printGraphPNG(
-            "data/individual${Identifier.idOf(this)}.png",
-            displayWeights = true,
-            removeDotFile = true,
-                displayId = false
-        )
+    override fun compute(input: List<Float>): List<Float> {
+        return innerInstance.compute(input)
     }
 }

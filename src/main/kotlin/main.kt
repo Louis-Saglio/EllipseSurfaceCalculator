@@ -27,7 +27,7 @@ fun main() {
     )
     individual.printAsPNG("original", displayWeights = true, removeDotFile = true, displayId = true)
     val population = (0 until 200).map { individual.clone() }
-    val winner = evolve(population, 300, log = true, print = false).minByOrNull { it.fitness() }
+    val winner = evolve(population, 300, log = true).minByOrNull { it.fitness() }
     if (winner != null) {
         val a = (0 until 100).random().toFloat()
         val b = (0 until 100).random().toFloat()
@@ -36,7 +36,7 @@ fun main() {
         println("$a + $b == $result")
         println("Answer : $answer")
         println("Error : ${abs(answer - result)}")
-        winner.innerInstance.printGraphPNG("winner", displayWeights = true, removeDotFile = true, displayId = true)
+        winner.printAsPNG("optimal", displayWeights = true, removeDotFile = true, displayId = true)
 
         println("0 + 0 == ${winner.innerInstance.compute(listOf(0f, 0f), false)[0]}")
         println("100 + 100 == ${winner.innerInstance.compute(listOf(100f, 100f), false)[0]}")

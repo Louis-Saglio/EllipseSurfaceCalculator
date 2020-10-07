@@ -1,1 +1,4 @@
 [x] verify that there is no randomness in the feed algorithm
+[ ] return double instead of float
+[ ] isolate Random object by package
+[ ] fix memory leak of Identifier
