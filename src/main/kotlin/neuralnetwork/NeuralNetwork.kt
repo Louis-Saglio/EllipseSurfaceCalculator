@@ -45,7 +45,10 @@ class NeuralNetwork(
 ) {
     private val outputNeuronsByInput: MutableMap<Inputable<Float>, MutableSet<Neuron>> = buildOutputNeuronsByInput()
     private val neurons
+        // todo : use cache
         get() = outputNeuronsByInput.values.flatten().toMutableSet()
+    val size: Int
+        get() = inputsByNeuron.size + outputNeuronsByInput.size
 
     init {
         inputsByNeuron.forEach { (neuron, inputs) ->
@@ -68,7 +71,7 @@ class NeuralNetwork(
         return outputNeuronsByInput.getOrDefault(inputable, mutableSetOf())
     }
 
-    fun compute(inputs: List<Float>, log: Boolean = false): List<Float> {
+    fun predict(inputs: List<Float>, log: Boolean = false): List<Float> {
         val alreadyComputedNeurons = mutableSetOf<Neuron>()
         (inputNodes zip inputs).forEach { it.first.output = it.second }
         var layer = inputNodes.flatMapTo(mutableSetOf()) { getOutputNeuronsOf(it) }
@@ -111,7 +114,6 @@ class NeuralNetwork(
         val pngFile = File("$fileName.png")
         pngFile.delete()
         do {
-            print("*")
             Runtime.getRuntime().exec("dot -Tpng $fileName.dot -o $fileName.png")
         } while (!pngFile.exists())
 

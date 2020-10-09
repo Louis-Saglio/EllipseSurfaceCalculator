@@ -23,6 +23,6 @@ internal class NeuralNetworkTest {
         )
         val clone = nn.clone()
 
-        assertEquals(nn.compute(listOf(0f, 1f)), clone.compute(listOf(0f, 1f)))
+        assertEquals(nn.predict(listOf(0f, 1f)), clone.predict(listOf(0f, 1f)))
     }
 }

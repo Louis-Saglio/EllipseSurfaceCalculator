@@ -7,10 +7,10 @@ abstract class Problem<InputType, OutputType> {
     abstract fun getInput(): InputType
     abstract fun getOutput(): OutputType
     abstract fun computeError(predictions: OutputType, expectedOutput: OutputType): Float
-    fun evaluate(precision: Int, function: (InputType) -> OutputType): Float {
+    fun computeAverageError(precision: Int, predict: (InputType) -> OutputType): Float {
         val results = mutableSetOf<Float>()
         repeat(precision) {
-            val predictions = function(getInput())
+            val predictions = predict(getInput())
             results.add(computeError(predictions, getOutput()))
         }
         return results.average().toFloat()
@@ -27,10 +27,10 @@ abstract class Individual<T : Individual<T, InputType, OutputType>, InputType, O
     abstract fun mutate()
     abstract fun compute(input: InputType): OutputType
 
-    fun fitness(): Float {
+    open fun fitness(): Float {
         fitnessLock.withLock {
             if (fitness == null) {
-                fitness = problem.evaluate(10) { compute(it) }
+                fitness = problem.computeAverageError(10, this::compute)
             }
             return fitness!!
         }
@@ -51,7 +51,7 @@ fun <T : Individual<T, U, V>, U, V> evolve(
             .sortedBy(Individual<T, U, V>::fitness)
             .subList(0, population.size / 2)
             .flatMapTo(mutableListOf()) { listOf(it.clone(), it.clone()) }
-        if (log) println(population.map(Individual<T, U, V>::fitness).average())
+        if (log) println(population.map(Individual<T, U, V>::fitness).minOrNull())
     }
     return population
 }

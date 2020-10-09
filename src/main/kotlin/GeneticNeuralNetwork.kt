@@ -28,6 +28,10 @@ class GeneticNeuralNetwork(
     }
 
     override fun compute(input: List<Float>): List<Float> {
-        return innerInstance.compute(input)
+        return innerInstance.predict(input)
+    }
+
+    override fun fitness(): Float {
+        return super.fitness() * innerInstance.size.toFloat().pow(3)
     }
 }
