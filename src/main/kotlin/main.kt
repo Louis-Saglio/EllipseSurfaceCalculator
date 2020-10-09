@@ -2,7 +2,22 @@ import genetic.evolve
 import neuralnetwork.InputNode
 import neuralnetwork.NeuralNetwork
 import neuralnetwork.Neuron
+import neuralnetwork.random
 import kotlin.math.abs
+
+class Addition : NeuralNetworkProblem() {
+    private var a = 0f
+    private var b = 0f
+    override fun getInput(): List<Float> {
+        a = (-100..100).random(random).toFloat()
+        b = (-100..100).random(random).toFloat()
+        return listOf(a, b)
+    }
+
+    override fun getOutput(): List<Float> {
+        return listOf(a + b)
+    }
+}
 
 fun main() {
     val i0 = InputNode(0f)
@@ -10,9 +25,6 @@ fun main() {
     val n0 = Neuron(0f)
     val n1 = Neuron(0f)
     val n2 = Neuron(0f)
-    val n3 = Neuron(0f)
-    val n4 = Neuron(0f)
-    val n5 = Neuron(0f)
     val individual = GeneticNeuralNetwork(
 //    NeuralNetwork.buildRandom(5, 5, 2, 2, 2, 1)
         NeuralNetwork(
@@ -23,7 +35,8 @@ fun main() {
                 n2 to mutableListOf(n0, n1),
             ),
             listOf(n2)
-        )
+        ),
+        Addition()
     )
     individual.printAsPNG("original", displayWeights = true, removeDotFile = true, displayId = true)
     val population = (0 until 200).map { individual.clone() }
@@ -42,5 +55,6 @@ fun main() {
         println("100 + 100 == ${winner.innerInstance.compute(listOf(100f, 100f), false)[0]}")
         println("-100 + 100 == ${winner.innerInstance.compute(listOf(-100f, 100f), false)[0]}")
         println("100 + -100 == ${winner.innerInstance.compute(listOf(100f, -100f), false)[0]}")
+        println("1000 + 1000 == ${winner.innerInstance.compute(listOf(10000f, 10000f), false)[0]}")
     }
 }

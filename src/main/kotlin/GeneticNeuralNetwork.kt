@@ -1,7 +1,6 @@
 import genetic.Individual
 import genetic.Problem
 import neuralnetwork.NeuralNetwork
-import neuralnetwork.random
 import kotlin.math.pow
 
 abstract class NeuralNetworkProblem : Problem<List<Float>, List<Float>>() {
@@ -11,24 +10,13 @@ abstract class NeuralNetworkProblem : Problem<List<Float>, List<Float>>() {
     }
 }
 
-class Addition : NeuralNetworkProblem() {
-    private var a = 0f
-    private var b = 0f
-    override fun getInput(): List<Float> {
-        a = (-100..100).random(random).toFloat()
-        b = (-100..100).random(random).toFloat()
-        return listOf(a, b)
-    }
-
-    override fun getOutput(): List<Float> {
-        return listOf(a + b)
-    }
-}
-
-class GeneticNeuralNetwork(val innerInstance: NeuralNetwork) : Individual<GeneticNeuralNetwork, List<Float>, List<Float>>(Addition()) {
+class GeneticNeuralNetwork(
+    val innerInstance: NeuralNetwork,
+    private val problem: NeuralNetworkProblem
+) : Individual<GeneticNeuralNetwork, List<Float>, List<Float>>(problem) {
 
     override fun clone(): GeneticNeuralNetwork {
-        return GeneticNeuralNetwork(innerInstance.clone())
+        return GeneticNeuralNetwork(innerInstance.clone(), problem)
     }
 
     fun printAsPNG(fileName: String, displayWeights: Boolean, removeDotFile: Boolean, displayId: Boolean) {

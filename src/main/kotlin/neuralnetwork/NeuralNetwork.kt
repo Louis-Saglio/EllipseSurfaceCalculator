@@ -106,7 +106,15 @@ class NeuralNetwork(
     fun printGraphPNG(fileName: String, displayWeights: Boolean, removeDotFile: Boolean, displayId: Boolean) {
         val dotFile = File("$fileName.dot")
         dotFile.writeText(asGraphviz(displayWeights = displayWeights, displayId))
-        Runtime.getRuntime().exec("dot -Tpng $fileName.dot -o $fileName.png")
+
+        // for some unknown reasons, the png file is not generated , except if we try a lot of times (8 most of the times)
+        val pngFile = File("$fileName.png")
+        pngFile.delete()
+        do {
+            print("*")
+            Runtime.getRuntime().exec("dot -Tpng $fileName.dot -o $fileName.png")
+        } while (!pngFile.exists())
+
         if (removeDotFile) {
             dotFile.deleteOnExit()
         }
