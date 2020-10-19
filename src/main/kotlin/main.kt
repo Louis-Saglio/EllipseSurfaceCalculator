@@ -5,7 +5,7 @@ import neuralnetwork.Neuron
 import neuralnetwork.random
 import kotlin.math.abs
 
-abstract class BasicOperation : NeuralNetworkProblem() {
+abstract class BasicOperation(private val symbol: String) : NeuralNetworkProblem() {
     private var a = 0f
     private var b = 0f
 
@@ -20,15 +20,20 @@ abstract class BasicOperation : NeuralNetworkProblem() {
     override fun getOutput(): List<Float> {
         return listOf(compute(a, b))
     }
+
+    override fun toString(input: List<Float>, result: List<Float>): String {
+        val answer = input.sum()
+        return "${input[0]} $symbol ${input[1]} == ${result[0]}\nAnswer : $answer\nError : ${abs(answer - result[0])}"
+    }
 }
 
-class Addition : BasicOperation() {
+class Addition : BasicOperation("+") {
     override fun compute(a: Float, b: Float): Float {
         return a + b
     }
 }
 
-class Multiplication : BasicOperation() {
+class Multiplication : BasicOperation("*") {
     override fun compute(a: Float, b: Float): Float {
         return a * b
     }
@@ -40,6 +45,7 @@ fun main() {
     val n0 = Neuron(0f)
     val n1 = Neuron(0f)
     val n2 = Neuron(0f)
+    val problem = Addition()
     val individual = GeneticNeuralNetwork(
 //    NeuralNetwork.buildRandom(5, 5, 2, 2, 2, 1)
         NeuralNetwork(
@@ -51,26 +57,9 @@ fun main() {
             ),
             listOf(n2)
         ),
-        Addition()
-//        Multiplication()
+            problem
     )
     individual.printAsPNG("original", displayWeights = true, removeDotFile = true, displayId = true)
     val population = (0 until 1000).map { individual.clone() }
-    val winner = evolve(population, 500, log = true).minByOrNull { it.fitness() }
-    if (winner != null) {
-        val a = (0 until 100).random().toFloat()
-        val b = (0 until 100).random().toFloat()
-        val result = winner.innerInstance.predict(listOf(a, b), true)[0]
-        val answer = a + b
-        println("$a + $b == $result")
-        println("Answer : $answer")
-        println("Error : ${abs(answer - result)}")
-        winner.printAsPNG("optimal", displayWeights = true, removeDotFile = true, displayId = true)
-
-        println("0 + 0 == ${winner.innerInstance.predict(listOf(0f, 0f), false)[0]}")
-        println("100 + 100 == ${winner.innerInstance.predict(listOf(100f, 100f), false)[0]}")
-        println("-100 + 100 == ${winner.innerInstance.predict(listOf(-100f, 100f), false)[0]}")
-        println("100 + -100 == ${winner.innerInstance.predict(listOf(100f, -100f), false)[0]}")
-        println("1000 + 1000 == ${winner.innerInstance.predict(listOf(10000f, 10000f), false)[0]}")
-    }
+    evolve(population, 500, log = true).minByOrNull { it.fitness() }?.showOff()
 }

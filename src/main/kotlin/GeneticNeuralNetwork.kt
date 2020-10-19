@@ -5,15 +5,15 @@ import kotlin.math.pow
 
 abstract class NeuralNetworkProblem : Problem<List<Float>, List<Float>>() {
 
-    override fun computeError(predictions: List<Float>, expectedOutput: List<Float>): Float {
-        return (expectedOutput zip predictions).map { (output, prediction) -> (output - prediction).pow(2) }.average().toFloat()
+    override fun computeError(predictions: List<Float>, expectedOutputs: List<Float>): Float {
+        return (expectedOutputs zip predictions).map { (output, prediction) -> (output - prediction).pow(2) }.average().toFloat()
     }
 }
 
 // todo : inherit from NeuralNetwork
 class GeneticNeuralNetwork(
-    val innerInstance: NeuralNetwork,
-    private val problem: NeuralNetworkProblem
+        private val innerInstance: NeuralNetwork,
+        private val problem: NeuralNetworkProblem
 ) : Individual<GeneticNeuralNetwork, List<Float>, List<Float>>(problem) {
 
     override fun clone(): GeneticNeuralNetwork {
@@ -34,5 +34,11 @@ class GeneticNeuralNetwork(
 
     override fun fitness(): Float {
         return super.fitness() * innerInstance.size.toFloat().pow(3)
+    }
+
+    override fun showOff() {
+        val input = problem.getInput()
+        println(problem.toString(input, innerInstance.predict(input, true)))
+        printAsPNG("optimal", displayWeights = true, removeDotFile = true, displayId = true)
     }
 }

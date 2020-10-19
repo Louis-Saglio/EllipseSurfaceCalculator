@@ -4,9 +4,10 @@ import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
 abstract class Problem<InputType, OutputType> {
+    // todo : should merge getInput/Output
     abstract fun getInput(): InputType
     abstract fun getOutput(): OutputType
-    abstract fun computeError(predictions: OutputType, expectedOutput: OutputType): Float
+    abstract fun computeError(predictions: OutputType, expectedOutputs: OutputType): Float
     fun computeAverageError(precision: Int, predict: (InputType) -> OutputType): Float {
         val results = mutableSetOf<Float>()
         repeat(precision) {
@@ -15,6 +16,7 @@ abstract class Problem<InputType, OutputType> {
         }
         return results.average().toFloat()
     }
+    abstract fun toString(input: InputType, result: OutputType): String
 }
 
 abstract class Individual<T : Individual<T, InputType, OutputType>, InputType, OutputType>(
@@ -26,6 +28,7 @@ abstract class Individual<T : Individual<T, InputType, OutputType>, InputType, O
     abstract fun clone(): T
     abstract fun mutate()
     abstract fun compute(input: InputType): OutputType
+    abstract fun showOff()
 
     open fun fitness(): Float {
         fitnessLock.withLock {
