@@ -1,16 +1,24 @@
 package neuralnetwork
 
-import java.lang.RuntimeException
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
+import kotlin.math.exp
+import kotlin.math.tanh as tanh_
 
 interface Inputable<T> {
     fun getOutput(): T
 }
 
+class ActivationFunction(val name: String, val compute: (Float) -> Float)
+
+val sigmoid = ActivationFunction("sigmoid") { 1.0f / (1.0f + exp(-it)) }
+val tanh = ActivationFunction("tanh", ::tanh_)
+val identity = ActivationFunction("Identity") { it }
+
 class Neuron(private var bias: Float) : Inputable<Float> {
     private val weights = mutableListOf<Float>()
-    private var activationFunction: (Float) -> Float = { it }
+    private var activationFunction: ActivationFunction = identity
+//    private var activationFunction: ActivationFunction = listOf(identity, sigmoid, tanh)[(0 until 3).random()]
     private var nextOutput: Float? = null
     private val nextOutputLock = ReentrantLock()
     private var output = 0f
@@ -18,7 +26,7 @@ class Neuron(private var bias: Float) : Inputable<Float> {
     fun compute(inputs: List<Float>, log: Boolean = false) {
         if (inputs.size != weights.size) error("${inputs.size} input(s) but input size is ${weights.size}")
         nextOutputLock.withLock {
-            nextOutput = activationFunction((weights zip inputs).map { it.first * it.second }.sum() + bias)
+            nextOutput = activationFunction.compute((weights zip inputs).map { it.first * it.second }.sum() + bias)
         }
         if (log) {
             println(
@@ -58,7 +66,7 @@ class Neuron(private var bias: Float) : Inputable<Float> {
     fun asGraphvizNode(color: String? = null, displayId: Boolean): String {
         val id = if (displayId) Identifier.idOf(this).toString() else ""
         val bias = String.format("%.2f", bias)
-        return "\"${Identifier.idOf(this)}\" [label=\"${listOf(id, bias, output).joinToString("\\n")}\", color=${color ?: "blue"}]"
+        return "\"${Identifier.idOf(this)}\" [label=\"${listOf(id, bias, activationFunction.name, output).joinToString("\\n")}\", color=${color ?: "blue"}]"
     }
 
     fun asGraphvizLinks(inputs: Collection<Any>, displayWeights: Boolean = true): List<String> {
@@ -77,11 +85,17 @@ class Neuron(private var bias: Float) : Inputable<Float> {
         return neuron
     }
 
-    fun mutateWeightOrBias(weightIndex: Int, delta: Float) {
-        when {
-            weightIndex < weights.size -> weights[weightIndex] += delta
-            weightIndex == weights.size -> bias += delta
-            else -> error("weightIndex too high : $weightIndex, max : ${weights.size}")
-        }
+    // todo : rethink who should determine which internal part must mutate
+
+    fun mutateWeight(weightIndex: Int, delta: Float) {
+        weights[weightIndex] += delta
+    }
+
+    fun mutateBias(delta: Float) {
+        bias += delta
+    }
+
+    fun mutateActivationFunction(function: ActivationFunction) {
+        activationFunction = function
     }
 }

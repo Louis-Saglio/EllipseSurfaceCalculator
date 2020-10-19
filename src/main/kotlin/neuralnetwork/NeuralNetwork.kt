@@ -140,18 +140,8 @@ class NeuralNetwork(
         return NeuralNetwork(inputNodes, connexions, outputNeurons)
     }
 
-    private fun removeNeuron(neuron: Neuron) {
-        // todo: optimize by crossing data from connexions and outputNeuronsByInputable
-        inputsByNeuron.remove(neuron)
-        inputsByNeuron.forEach { (output, inputs) ->
-            inputs.remove(neuron)
-            output.setInputSize(inputs.size)
-        }
-        outputNeuronsByInput.remove(neuron)
-        outputNeuronsByInput.forEach { (_, neurons) -> neurons.remove(neuron) }
-    }
-
     private fun addNeuron(inputs: MutableList<Inputable<Float>>, outputs: MutableSet<Neuron>) {
+        // todo: optimize by crossing data from connexions and outputNeuronsByInputable
         val neuron = Neuron(0f)
         inputsByNeuron[neuron] = mutableListOf()
         outputNeuronsByInput[neuron] = mutableSetOf()
@@ -162,8 +152,8 @@ class NeuralNetwork(
     private fun removeConnexion(from: Inputable<Float>, to: Neuron) {
         val inputs = inputsByNeuron[to] ?: error("Neuron not found")
         inputs.remove(from)
-        (outputNeuronsByInput[from] ?: error("Input not found")).remove(to)
         to.setInputSize(inputs.size)
+        (outputNeuronsByInput[from] ?: error("Input not found")).remove(to)
     }
 
     private fun addConnexion(from: Inputable<Float>, to: Neuron) {
@@ -178,10 +168,14 @@ class NeuralNetwork(
         when (random.nextInt(100)) {
             in 0 until 80 -> {
                 val neuron = neurons.random()
-                neuron.mutateWeightOrBias(
-                    (0..inputsByNeuron[neuron]!!.size).random(random),
-                    (random.nextFloat() * 2) - 1
-                )
+                when (random.nextInt(100)) {
+                    in 0 until 80 -> neuron.mutateWeight(
+                        (0 until inputsByNeuron[neuron]!!.size).random(random),
+                        (random.nextFloat() * 2) - 1,
+                    )
+                    in 80 until 95 -> neuron.mutateBias((random.nextFloat() * 2) - 1)
+                    in 95 until 100 -> neuron.mutateActivationFunction(listOf(sigmoid, tanh, identity).choice(1).toList()[0])
+                }
             }
             // TODO: exception when collection is empty
 //            in 80 until 85 -> removeNeuron(neurons.filter { it !in outputNeurons }.random(random))
@@ -190,11 +184,11 @@ class NeuralNetwork(
             }
             in 85 until 95 -> removeConnexion(
                 outputNeuronsByInput.keys.filter { it !is InputNode }.random(random),
-                inputsByNeuron.keys.random(random)
+                inputsByNeuron.keys.random(random),
             )
             in 95 until 100 -> addConnexion(
                 outputNeuronsByInput.keys.filter { it !is InputNode }.random(random),
-                inputsByNeuron.keys.random(random)
+                inputsByNeuron.keys.random(random),
             )
         }
     }

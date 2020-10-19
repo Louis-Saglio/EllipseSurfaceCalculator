@@ -5,9 +5,12 @@ import neuralnetwork.Neuron
 import neuralnetwork.random
 import kotlin.math.abs
 
-class Addition : NeuralNetworkProblem() {
+abstract class BasicOperation : NeuralNetworkProblem() {
     private var a = 0f
     private var b = 0f
+
+    abstract fun compute(a: Float, b: Float): Float
+
     override fun getInput(): List<Float> {
         a = (-100..100).random(random).toFloat()
         b = (-100..100).random(random).toFloat()
@@ -15,7 +18,19 @@ class Addition : NeuralNetworkProblem() {
     }
 
     override fun getOutput(): List<Float> {
-        return listOf(a + b)
+        return listOf(compute(a, b))
+    }
+}
+
+class Addition : BasicOperation() {
+    override fun compute(a: Float, b: Float): Float {
+        return a + b
+    }
+}
+
+class Multiplication : BasicOperation() {
+    override fun compute(a: Float, b: Float): Float {
+        return a * b
     }
 }
 
@@ -37,6 +52,7 @@ fun main() {
             listOf(n2)
         ),
         Addition()
+//        Multiplication()
     )
     individual.printAsPNG("original", displayWeights = true, removeDotFile = true, displayId = true)
     val population = (0 until 1000).map { individual.clone() }

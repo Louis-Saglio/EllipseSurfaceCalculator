@@ -10,6 +10,7 @@ abstract class NeuralNetworkProblem : Problem<List<Float>, List<Float>>() {
     }
 }
 
+// todo : inherit from NeuralNetwork
 class GeneticNeuralNetwork(
     val innerInstance: NeuralNetwork,
     private val problem: NeuralNetworkProblem
