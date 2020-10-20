@@ -167,7 +167,7 @@ class NeuralNetwork(
         if (neurons.size < 2) return
         when (random.nextInt(110)) {
             in 0 until 80 -> {
-                val neuron = neurons.random()
+                val neuron = neurons.random(random)
                 when (random.nextInt(100)) {
                     in 0 until 80 -> neuron.mutateWeight(
                         (0 until inputsByNeuron[neuron]!!.size).random(random),
@@ -224,7 +224,7 @@ private fun <E> Collection<E>.choice(size: Int): Collection<E> {
     val collection = toMutableList()
     val rep = mutableListOf<E>()
     repeat(size) {
-        val next = collection.random()
+        val next = collection.random(random)
         collection.remove(next)
         rep.add(next)
     }

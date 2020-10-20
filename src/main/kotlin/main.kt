@@ -47,7 +47,7 @@ fun main() {
     val n2 = Neuron(0f)
     val problem = Addition()
     val individual = GeneticNeuralNetwork(
-//    NeuralNetwork.buildRandom(5, 5, 2, 2, 2, 1)
+//    NeuralNetwork.buildRandom(5, 5, 2, 2, 2, 1),
         NeuralNetwork(
             listOf(i0, i1),
             mutableMapOf(
