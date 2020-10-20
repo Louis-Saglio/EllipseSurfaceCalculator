@@ -33,7 +33,7 @@ abstract class Individual<T : Individual<T, InputType, OutputType>, InputType, O
     open fun fitness(): Float {
         fitnessLock.withLock {
             if (fitness == null) {
-                fitness = problem.computeAverageError(10, this::compute)
+                fitness = problem.computeAverageError(4, this::compute)
             }
             return fitness!!
         }
@@ -48,12 +48,12 @@ fun <T : Individual<T, U, V>, U, V> evolve(
     var population = mutableListOf<T>()
     @Suppress("UNCHECKED_CAST")
     population.addAll(individuals as Collection<T>)
-    for (generationIndex in 0 until generationNumber) {
+    repeat(generationNumber) {
         population = population
-            .onEach { it.mutate() }
-            .sortedBy(Individual<T, U, V>::fitness)
-            .subList(0, population.size / 2)
-            .flatMapTo(mutableListOf()) { listOf(it.clone(), it.clone()) }
+                .onEach { it.mutate() }
+                .sortedBy(Individual<T, U, V>::fitness)
+                .subList(0, population.size / 2)
+                .flatMapTo(mutableListOf()) { listOf(it.clone(), it.clone()) }
         if (log) println(population.map(Individual<T, U, V>::fitness).minOrNull())
     }
     return population

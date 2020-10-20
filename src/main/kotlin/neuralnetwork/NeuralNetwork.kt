@@ -165,7 +165,7 @@ class NeuralNetwork(
 
     fun mutate() {
         if (neurons.size < 2) return
-        when (random.nextInt(100)) {
+        when (random.nextInt(110)) {
             in 0 until 80 -> {
                 val neuron = neurons.random()
                 when (random.nextInt(100)) {
@@ -177,8 +177,6 @@ class NeuralNetwork(
                     in 95 until 100 -> neuron.mutateActivationFunction(listOf(sigmoid, tanh, identity).choice(1).toList()[0])
                 }
             }
-            // TODO: exception when collection is empty
-//            in 80 until 85 -> removeNeuron(neurons.filter { it !in outputNeurons }.random(random))
             in 80 until 85 -> {
                 addNeuron((neurons + inputNodes).choice(2).toMutableList(), neurons.choice(2).toMutableSet())
             }
