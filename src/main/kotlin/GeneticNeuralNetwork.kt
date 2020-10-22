@@ -12,8 +12,8 @@ abstract class NeuralNetworkProblem : Problem<List<Float>, List<Float>>() {
 
 // todo : inherit from NeuralNetwork
 class GeneticNeuralNetwork(
-        private val innerInstance: NeuralNetwork,
-        private val problem: NeuralNetworkProblem
+    private val innerInstance: NeuralNetwork,
+    private val problem: NeuralNetworkProblem
 ) : Individual<GeneticNeuralNetwork, List<Float>, List<Float>>(problem) {
 
     override fun clone(): GeneticNeuralNetwork {
@@ -33,7 +33,7 @@ class GeneticNeuralNetwork(
     }
 
     override fun fitness(): Float {
-        return super.fitness() * innerInstance.size.toFloat().pow(3)
+        return super.fitness() + innerInstance.size.toFloat()
     }
 
     override fun showOff() {

@@ -48,7 +48,7 @@ class NeuralNetwork(
         // todo : use cache
         get() = outputNeuronsByInput.values.flatten().toMutableSet()
     val size: Int
-        get() = inputsByNeuron.size + outputNeuronsByInput.size
+        get() = inputsByNeuron.flatMap { it.value }.size
 
     init {
         inputsByNeuron.forEach { (neuron, inputs) ->
@@ -200,14 +200,14 @@ class NeuralNetwork(
             inputNbr: Int,
             outputNbr: Int,
         ): NeuralNetwork {
-            val neurons = (0 until (minNeuronNbr..maxNeuronNbr).random()).map { Neuron(0f) }
+            val neurons = (0 until (minNeuronNbr..maxNeuronNbr).random(random)).map { Neuron(0f) }
             val inputNodes = (0 until inputNbr).map { InputNode(0f) }
             val inputables: MutableList<Inputable<Float>> = inputNodes.toMutableList()
             return NeuralNetwork(
                 inputNodes,
                 neurons.associateWithTo(mutableMapOf()) { neuron ->
-                    (0 until (minConnexionNbr..maxConnexionNbr).random()).mapTo(mutableListOf()) {
-                        val inputable = inputables.random()
+                    (0 until (minConnexionNbr..maxConnexionNbr).random(random)).mapTo(mutableListOf()) {
+                        val inputable = inputables.random(random)
                         inputables.add(neuron)
                         inputable
                     }

@@ -50,10 +50,10 @@ fun <T : Individual<T, U, V>, U, V> evolve(
     population.addAll(individuals as Collection<T>)
     repeat(generationNumber) {
         population = population
-                .onEach { it.mutate() }
-                .sortedBy(Individual<T, U, V>::fitness)
-                .subList(0, population.size / 2)
-                .flatMapTo(mutableListOf()) { listOf(it.clone(), it.clone()) }
+            .onEach { it.mutate() }
+            .sortedBy(Individual<T, U, V>::fitness)
+            .subList(0, population.size / 2)
+            .flatMapTo(mutableListOf()) { listOf(it.clone(), it.clone()) }
         if (log) println(population.map(Individual<T, U, V>::fitness).minOrNull())
     }
     return population
