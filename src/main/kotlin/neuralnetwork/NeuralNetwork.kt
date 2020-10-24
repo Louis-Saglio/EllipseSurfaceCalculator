@@ -67,7 +67,7 @@ class NeuralNetwork(
         return data
     }
 
-    private fun getOutputNeuronsOf(inputable: Inputable<Float>): Set<Neuron> {
+    private fun getOutputNeuronsOf(inputable: Inputable<Float>): MutableSet<Neuron> {
         return outputNeuronsByInput.getOrDefault(inputable, mutableSetOf())
     }
 
@@ -171,7 +171,7 @@ class NeuralNetwork(
     private fun addConnexion(from: Inputable<Float>, to: Neuron) {
         val inputs = inputsByNeuron[to] ?: error("Neuron not found")
         inputs.add(from)
-        (outputNeuronsByInput[from] ?: error("Input not found")).add(to)
+        getOutputNeuronsOf(from).add(to)
         to.setInputSize(inputs.size)
     }
 
@@ -191,10 +191,9 @@ class NeuralNetwork(
                 }
             }
             in 80 until 85 -> {
-                val output = if (neurons.isEmpty()) mutableSetOf() else mutableSetOf(neurons.random())
-                val inputables = neurons + inputNodes
+                val output = if (neurons.isEmpty()) mutableSetOf() else mutableSetOf(neurons.random(random))
                 addNeuron(
-                    mutableListOf(inputables.random()),
+                    mutableListOf((neurons + inputNodes).random(random)),
                     output,
                 )
             }
@@ -215,8 +214,9 @@ class NeuralNetwork(
                 }
             }
             in 100 until 105 -> {
-                if (neurons.isNotEmpty()) {
-                    removeNeuron(inputsByNeuron.keys.filter { it !in outputNeurons }.random())
+                val removableNeurons = inputsByNeuron.keys.filter { it !in outputNeurons }
+                if (removableNeurons.isNotEmpty()) {
+                    removeNeuron(removableNeurons.random(random))
                 }
             }
         }
