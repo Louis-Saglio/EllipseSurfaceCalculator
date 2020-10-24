@@ -150,10 +150,22 @@ class NeuralNetwork(
     }
 
     private fun removeConnexion(from: Inputable<Float>, to: Neuron) {
+        assert(!(from is InputNode && outputNeuronsByInput[from]!!.size == 1))
         val inputs = inputsByNeuron[to] ?: error("Neuron not found")
         inputs.remove(from)
         to.setInputSize(inputs.size)
         (outputNeuronsByInput[from] ?: error("Input not found")).remove(to)
+    }
+
+    private fun removeNeuron(neuron: Neuron) {
+        // todo: optimize by crossing data from connexions and outputNeuronsByInputable
+        inputsByNeuron.remove(neuron)
+        inputsByNeuron.forEach { (output, inputs) ->
+            inputs.remove(neuron)
+            output.setInputSize(inputs.size)
+        }
+        outputNeuronsByInput.remove(neuron)
+        outputNeuronsByInput.forEach { (_, neurons) -> neurons.remove(neuron) }
     }
 
     private fun addConnexion(from: Inputable<Float>, to: Neuron) {
@@ -164,30 +176,49 @@ class NeuralNetwork(
     }
 
     fun mutate() {
-        if (neurons.size < 2) return
-        when (random.nextInt(110)) {
+        when (random.nextInt(115)) {
             in 0 until 80 -> {
-                val neuron = neurons.random(random)
-                when (random.nextInt(100)) {
-                    in 0 until 80 -> neuron.mutateWeight(
-                        (0 until inputsByNeuron[neuron]!!.size).random(random),
-                        (random.nextFloat() * 2) - 1,
-                    )
-                    in 80 until 95 -> neuron.mutateBias((random.nextFloat() * 2) - 1)
-                    in 95 until 100 -> neuron.mutateActivationFunction(listOf(sigmoid, tanh, identity).choice(1).toList()[0])
+                if (neurons.isNotEmpty()) {
+                    val neuron = neurons.random(random)
+                    when (random.nextInt(100)) {
+                        in 0 until 80 -> neuron.mutateWeight(
+                            (0 until inputsByNeuron[neuron]!!.size).random(random),
+                            (random.nextFloat() * 2) - 1,
+                        )
+                        in 80 until 95 -> neuron.mutateBias((random.nextFloat() * 2) - 1)
+                        in 95 until 100 -> neuron.mutateActivationFunction(listOf(sigmoid, tanh, identity).choice(1).toList()[0])
+                    }
                 }
             }
             in 80 until 85 -> {
-                addNeuron((neurons + inputNodes).choice(2).toMutableList(), neurons.choice(2).toMutableSet())
+                val output = if (neurons.isEmpty()) mutableSetOf() else mutableSetOf(neurons.random())
+                val inputables = neurons + inputNodes
+                addNeuron(
+                    mutableListOf(inputables.random()),
+                    output,
+                )
             }
-            in 85 until 95 -> removeConnexion(
-                outputNeuronsByInput.keys.filter { it !is InputNode }.random(random),
-                inputsByNeuron.keys.random(random),
-            )
-            in 95 until 100 -> addConnexion(
-                outputNeuronsByInput.keys.filter { it !is InputNode }.random(random),
-                inputsByNeuron.keys.random(random),
-            )
+            in 85 until 95 -> {
+                if (neurons.isNotEmpty()) {
+                    removeConnexion(
+                        outputNeuronsByInput.keys.filter { !(it is InputNode && outputNeuronsByInput[it]!!.size == 1) }.random(random),
+                        inputsByNeuron.keys.random(random),
+                    )
+                }
+            }
+            in 95 until 100 -> {
+                if (neurons.isNotEmpty()) {
+                    addConnexion(
+                        outputNeuronsByInput.keys.random(random),
+                        inputsByNeuron.keys.random(random),
+                    )
+                }
+            }
+            in 100 until 105 -> {
+                if (neurons.isNotEmpty()) {
+                    removeNeuron(inputsByNeuron.keys.filter { it !in outputNeurons }.random())
+                }
+            }
         }
     }
 
