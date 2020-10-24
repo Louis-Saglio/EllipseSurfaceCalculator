@@ -48,7 +48,7 @@ class NeuralNetwork(
         // todo : use cache
         get() = outputNeuronsByInput.values.flatten().toMutableSet()
     val size: Int
-        get() = inputsByNeuron.flatMap { it.value }.size
+        get() = inputsByNeuron.flatMap { it.value + it.key }.toSet().size + inputsByNeuron.flatMap { it.value }.size
 
     init {
         inputsByNeuron.forEach { (neuron, inputs) ->
