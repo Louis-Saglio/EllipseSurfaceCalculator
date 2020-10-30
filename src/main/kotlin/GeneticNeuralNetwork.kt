@@ -33,7 +33,7 @@ class GeneticNeuralNetwork(
     }
 
     override fun fitness(): Float {
-        return super.fitness() + innerInstance.size.toFloat()
+        return super.fitness() * innerInstance.size.toFloat().pow(5)
     }
 
     override fun showOff() {

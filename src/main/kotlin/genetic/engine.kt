@@ -43,18 +43,19 @@ abstract class Individual<T : Individual<T, InputType, OutputType>, InputType, O
 fun <T : Individual<T, U, V>, U, V> evolve(
     individuals: List<Individual<T, U, V>>,
     generationNumber: Int,
+    dividePopulationBy: Int = 2,
     log: Boolean = false,
 ): List<T> {
     var population = mutableListOf<T>()
     @Suppress("UNCHECKED_CAST")
     population.addAll(individuals as Collection<T>)
-    repeat(generationNumber) {
+    repeat(generationNumber) { index ->
         population = population
             .onEach { it.mutate() }
             .sortedBy(Individual<T, U, V>::fitness)
-            .subList(0, population.size / 2)
-            .flatMapTo(mutableListOf()) { listOf(it.clone(), it.clone()) }
-        if (log) println(population.map(Individual<T, U, V>::fitness).minOrNull())
+            .subList(0, population.size / dividePopulationBy)
+            .flatMapTo(mutableListOf()) { individual -> (0 until dividePopulationBy).map { individual.clone() } }
+        if (log) println("$index, ${population.map(Individual<T, U, V>::fitness).minOrNull()}, $index, ${population.map(Individual<T, U, V>::fitness).average()}")
     }
     return population
 }
