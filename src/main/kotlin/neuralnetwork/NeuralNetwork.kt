@@ -180,10 +180,14 @@ class NeuralNetwork(
                 if (neurons.isNotEmpty()) {
                     val neuron = neurons.random(random)
                     when (random.nextInt(100)) {
-                        in 0 until 80 -> neuron.mutateWeight(
-                            (0 until inputsByNeuron[neuron]!!.size).random(random),
-                            (random.nextFloat() * 2) - 1,
-                        )
+                        in 0 until 80 -> {
+                            if (inputsByNeuron[neuron]!!.isNotEmpty()) {
+                                neuron.mutateWeight(
+                                    (0 until inputsByNeuron[neuron]!!.size).random(random),
+                                    (random.nextFloat() * 2) - 1,
+                                )
+                            }
+                        }
                         in 80 until 95 -> neuron.mutateBias((random.nextFloat() * 2) - 1)
                         in 95 until 100 -> neuron.mutateActivationFunction(listOf(sigmoid, tanh, identity).choice(1).toList()[0])
                     }
