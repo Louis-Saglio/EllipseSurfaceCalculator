@@ -45,8 +45,7 @@ class NeuralNetwork(
 ) {
     private val outputNeuronsByInput: MutableMap<Inputable<Float>, MutableSet<Neuron>> = buildOutputNeuronsByInput()
     private val neurons
-        // todo : use cache
-        get() = outputNeuronsByInput.values.flatten().toMutableSet()
+        get() = inputsByNeuron.keys
     val size: Int
         get() = inputsByNeuron.flatMap { it.value + it.key }.toSet().size + inputsByNeuron.flatMap { it.value }.size
 
