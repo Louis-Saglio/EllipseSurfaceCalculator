@@ -1,5 +1,6 @@
 package genetic
 
+import GeneticNeuralNetwork
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
@@ -55,7 +56,14 @@ fun <T : Individual<T, U, V>, U, V> evolve(
             .sortedBy(Individual<T, U, V>::fitness)
             .subList(0, population.size / dividePopulationBy)
             .flatMapTo(mutableListOf()) { individual -> (0 until dividePopulationBy).map { individual.clone() } }
-        if (log) println("$index, ${population.map(Individual<T, U, V>::fitness).minOrNull()}, $index, ${population.map(Individual<T, U, V>::fitness).average()}")
+        val best = population.minByOrNull { it.fitness() }
+        if (log) {
+            if (best is GeneticNeuralNetwork) {
+                println("$index, ${best.fitness()}, ${best.getSize()}")
+            } else {
+                if (log) println("$index, ${population.map(Individual<T, U, V>::fitness).minOrNull()}, ${population.map(Individual<T, U, V>::fitness).average()}")
+            }
+        }
     }
     return population
 }

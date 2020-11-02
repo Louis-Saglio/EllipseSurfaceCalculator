@@ -13,8 +13,11 @@ abstract class NeuralNetworkProblem : Problem<List<Float>, List<Float>>() {
 // todo : inherit from NeuralNetwork
 class GeneticNeuralNetwork(
     private val innerInstance: NeuralNetwork,
-    private val problem: NeuralNetworkProblem
+    private val problem: NeuralNetworkProblem,
+    var log: Boolean = false
 ) : Individual<GeneticNeuralNetwork, List<Float>, List<Float>>(problem) {
+
+    fun getSize(): Int = innerInstance.size
 
     override fun clone(): GeneticNeuralNetwork {
         return GeneticNeuralNetwork(innerInstance.clone(), problem)
@@ -29,11 +32,11 @@ class GeneticNeuralNetwork(
     }
 
     override fun compute(input: List<Float>): List<Float> {
-        return innerInstance.predict(input)
+        return innerInstance.predict(input, log)
     }
 
     override fun fitness(): Float {
-        return super.fitness() * innerInstance.size.toFloat().pow(5)
+        return super.fitness().pow(1) * innerInstance.size.toFloat().pow(2)
     }
 
     override fun showOff() {

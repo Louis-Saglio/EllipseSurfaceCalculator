@@ -3,6 +3,7 @@ package neuralnetwork
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 import kotlin.math.exp
+import kotlin.math.sin
 import kotlin.math.tanh as tanh_
 
 interface Inputable<T> {
@@ -14,11 +15,17 @@ class ActivationFunction(val name: String, val compute: (Float) -> Float)
 val sigmoid = ActivationFunction("sigmoid") { 1.0f / (1.0f + exp(-it)) }
 val tanh = ActivationFunction("tanh", ::tanh_)
 val identity = ActivationFunction("Identity") { it }
+val sin = ActivationFunction("sin") { sin(it) }
 
 class Neuron(private var bias: Float) : Inputable<Float> {
+
+    companion object {
+        val possibleActivationFunctions = listOf(identity, sigmoid, tanh, sin)
+    }
+
     private val weights = mutableListOf<Float>()
-    private var activationFunction: ActivationFunction = identity
-//    private var activationFunction: ActivationFunction = listOf(identity, sigmoid, tanh)[(0 until 3).random()]
+//    private var activationFunction: ActivationFunction = identity
+    private var activationFunction: ActivationFunction = possibleActivationFunctions.random(random)
     private var nextOutput: Float? = null
     private val nextOutputLock = ReentrantLock()
     private var output = 0f
@@ -82,6 +89,7 @@ class Neuron(private var bias: Float) : Inputable<Float> {
     fun clone(): Neuron {
         val neuron = Neuron(bias)
         neuron.weights.addAll(weights)
+        neuron.activationFunction = activationFunction
         return neuron
     }
 
