@@ -46,7 +46,7 @@ abstract class OperationChain(private val size: Int, private val symbol: String)
     }
 }
 
-class AdditionChain(size: Int): OperationChain(size, "+") {
+class AdditionChain(size: Int) : OperationChain(size, "+") {
     override fun compute(numbers: List<Float>): List<Float> {
         return listOf(numbers.sum())
     }
@@ -170,8 +170,8 @@ fun main() {
         problem
     )
     individual.printAsPNG("original", displayWeights = true, removeDotFile = true, displayId = true)
-    val population = (0 until 2000).map { individual.clone() }
-    val winner = evolve(population, 500, 10, log = true).minByOrNull { it.fitness() }
+    val population = (0 until 100).map { individual.clone() }
+    val winner = evolve(population, 500, 0.1f, log = true).minByOrNull { it.fitness() }
     winner?.showOff()
     var stop = false
     do {

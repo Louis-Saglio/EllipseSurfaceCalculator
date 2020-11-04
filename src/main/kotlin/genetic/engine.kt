@@ -3,6 +3,7 @@ package genetic
 import GeneticNeuralNetwork
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
+import kotlin.math.roundToInt
 
 abstract class Problem<InputType, OutputType> {
     // todo : should merge getInput/Output
@@ -42,22 +43,29 @@ abstract class Individual<T : Individual<T, InputType, OutputType>, InputType, O
 }
 
 fun <T : Individual<T, U, V>, U, V> evolve(
-    individuals: List<Individual<T, U, V>>,
+    individuals: List<T>,
     generationNumber: Int,
-    dividePopulationBy: Int = 2,
+    keepAlivePct: Float = 0.5f,
+    keepBestsAlive: Int = 1,
     log: Boolean = false,
 ): List<T> {
-    var population = mutableListOf<T>()
-    @Suppress("UNCHECKED_CAST")
-    population.addAll(individuals as Collection<T>)
+    var population = mutableListOf<Individual<T, U, V>>()
+    population.addAll(individuals)
+//    val bests = mutableSetOf<Individual<T, U, V>>()
     repeat(generationNumber) { index ->
-        population = population
-            .onEach { it.mutate() }
-            .sortedBy(Individual<T, U, V>::fitness)
-            .subList(0, population.size / dividePopulationBy)
-            .flatMapTo(mutableListOf()) { individual -> (0 until dividePopulationBy).map { individual.clone() } }
-        val best = population.minByOrNull { it.fitness() }
+        // Sort population by fitness (best first)
+        population = population.sortedBy(Individual<T, U, V>::fitness).toMutableList()
+        // Retrieve the individuals with the best fitness
+        val bests = population.subList(0, keepBestsAlive)
+        population = population.subList(0, (population.size * keepAlivePct).roundToInt() - keepBestsAlive)
+        population = population.flatMapTo(mutableListOf()) { individual -> (0 until (1 / keepAlivePct).roundToInt()).map { individual.clone() } }
+        if (index < generationNumber - 1) {
+            // Do not mutate the final result
+            population = population.onEach { it.mutate() }
+        }
+        population.addAll(bests)
         if (log) {
+            val best = population.minByOrNull { it.fitness() }
             if (best is GeneticNeuralNetwork) {
                 println("$index, ${best.fitness()}, ${best.getSize()}")
             } else {
@@ -65,5 +73,6 @@ fun <T : Individual<T, U, V>, U, V> evolve(
             }
         }
     }
-    return population
+    @Suppress("UNCHECKED_CAST")
+    return population as List<T>
 }
