@@ -24,8 +24,8 @@ class Neuron(private var bias: Float) : Inputable<Float> {
     }
 
     private val weights = mutableListOf<Float>()
-//    private var activationFunction: ActivationFunction = identity
-    private var activationFunction: ActivationFunction = possibleActivationFunctions.random(random)
+    private var activationFunction: ActivationFunction = identity
+//    private var activationFunction: ActivationFunction = possibleActivationFunctions.random(random)
     private var nextOutput: Float? = null
     private val nextOutputLock = ReentrantLock()
     private var output = 0f

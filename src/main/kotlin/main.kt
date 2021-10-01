@@ -152,26 +152,26 @@ fun main() {
     val n1 = Neuron(0f)
     val n2 = Neuron(0f)
 //    val problem = BinaryReader(10)
-    val problem = AdditionChain(6)
+    val problem = AdditionChain(3)
 //    val problem = Addition()
 //    val problem = EllipseSurface()
     val individual = GeneticNeuralNetwork(
 //    NeuralNetwork.buildRandom(10, 15, 2, 4, 10, 1),
-        build(6, 1, 5),
-//        NeuralNetwork(
-//            listOf(i0, i1, i2),
-//            mutableMapOf(
-//                n0 to mutableListOf(i0, i1, i2),
-//                n1 to mutableListOf(i0, i1, i2),
-//                n2 to mutableListOf(n0, n1),
-//            ),
-//            listOf(n2)
-//        ),
+//        build(2, 1, 5),
+        NeuralNetwork(
+            listOf(i0, i1, i2),
+            mutableMapOf(
+                n0 to mutableListOf(i0, i1, i2),
+                n1 to mutableListOf(i0, i1, i2),
+                n2 to mutableListOf(n0, n1),
+            ),
+            listOf(n2)
+        ),
         problem
     )
     individual.printAsPNG("original", displayWeights = true, removeDotFile = true, displayId = true)
     val population = (0 until 2000).map { individual.clone() }
-    val winner = evolve(population, 500, 10, log = true).minByOrNull { it.fitness() }
+    val winner = evolve(population, 500, 2, log = true).minByOrNull { it.fitness() }
     winner?.showOff()
     var stop = false
     do {

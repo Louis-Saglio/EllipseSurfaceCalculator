@@ -189,7 +189,7 @@ class NeuralNetwork(
                             }
                         }
                         in 80 until 95 -> neuron.mutateBias((random.nextFloat() * 2) - 1)
-                        in 95 until 100 -> neuron.mutateActivationFunction(listOf(sigmoid, tanh, identity).choice(1).toList()[0])
+//                        in 95 until 100 -> neuron.mutateActivationFunction(listOf(sigmoid, tanh, identity).choice(1).toList()[0])
                     }
                 }
             }
